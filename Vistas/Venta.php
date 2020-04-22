@@ -1,6 +1,7 @@
 <?php
 /*TODO
 *Agregar funcionalidad de dinero en caja para motivos de  devoluciones
+*Agregar validación de si tabla venta está vacía
 */
     session_start();
 
@@ -52,22 +53,21 @@
         $fecha = date("Y-m-d");
         $rfc_emp = $_SESSION["empleado"];
         $rfc_cli = $_SESSION["cliente"];
-        
-        $consultarDatos = "INSERT INTO venta(fecha_venta, rfc_empleado, id_cliente) values ('$fecha', '$rfc_emp', '$rfc_cli')"; //registramos venta
-        $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
-        
+      
         $consultarDatos = "SELECT porcentaje FROM iva ORDER BY ABS(DATEDIFF(fecha, '$fecha')) LIMIT 1"; //conseguimos el porcentaje de IVA de la fecha más cercana a la actual
         $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
         $row = mysqli_fetch_array($ejecutarConsultar);
-
         $porcentaje =  $row["porcentaje"];
+        
+        $consultarDatos = "INSERT INTO venta(fecha_venta, rfc_empleado, id_cliente, iva) values ('$fecha', '$rfc_emp', '$rfc_cli', $porcentaje)"; //registramos venta
+        $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
         
         foreach($_SESSION["orden"] as $id=>$info){
             $clave_producto = $id;
             $cantidad_producto = $_SESSION["orden"][$id]["cantidad"];
             $valor_unitario = $_SESSION["orden"][$id]["precio"];
             
-            $consultarDatos = "INSERT INTO detalle_venta(folio_venta,  clave_producto, cantidad, valor_unitario, iva) values ($folio, $id, $cantidad_producto, $valor_unitario, $porcentaje)"; //registramos un detalle por cada producto en la canasta
+            $consultarDatos = "INSERT INTO detalle_venta(folio_venta,  clave_producto, cantidad, valor_unitario) values ($folio, $id, $cantidad_producto, $valor_unitario)"; //registramos un detalle por cada producto en la canasta
             $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
             
             $consultarDatos = "SELECT cantidad FROM producto WHERE clave_producto = $id"; //consultamos el stock de cada producto 
