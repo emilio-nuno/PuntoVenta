@@ -16,11 +16,16 @@ if(mysqli_connect_errno()){
 */
 $dineroCaja = true;
 if($dineroCaja){
-  $folio = $_SESSION["folio"];
+  $folio_venta = $_SESSION["folio_venta"];
+  $folio_devolucion = $_SESSION["folio_actual"];
+  $rfc = $_SESSION["empleado"];
   $fecha = date("Y-m-d");
   
-  $stmtRegistroDevolucion = $enlace->prepare("INSERT INTO devolucion(clave_producto, folio_venta, cantidad, motivo, fecha_devolucion) values(?, ?, ?, ?, ?)");
-  $stmtRegistroDevolucion->bind_param("iiiss", $clave, $folio, $cantidadDevolver, $motivo, $fecha);
+  $stmtRegistroDevolucion = $enlace->prepare("INSERT INTO devolucion(folio_venta, fecha, rfc_empleado) values(?, ?, ?)");
+  $stmtRegistroDevolucion->bind_param("iss", $folio_venta, $fecha, $rfc);
+  
+  $stmtRegistroDetalle = $enlace->prepare("INSERT INTO detalle_devolucion(folio_devolucion, clave_producto, cantidad, motivo) VALUES(?, ?, ?, ?)");
+  $stmtRegistroDetalle->bind_param("iiis", $folio_devolucion, $clave, $cantidadDevolver, $motivo);
   
   $stmtActualizarStock = $enlace->prepare("UPDATE producto SET cantidad = ? WHERE clave_producto = ?");
   $stmtActualizarStock->bind_param("ii", $cantidadGenerada, $clave);
@@ -28,27 +33,13 @@ if($dineroCaja){
   $stmtVerificarCantidad = $enlace->prepare("SELECT cantidad FROM producto where clave_producto = ?");
   $stmtVerificarCantidad->bind_param("i", $clave);
   
-  //Statement para validar si existe un registro en la tabla devoluciones
-  $stmtVerificarExistente = $enlace->prepare("SELECT cantidad FROM devolucion WHERE folio_venta = ? AND clave_producto = ?");
-  $stmtVerificarExistente->bind_param("ii", $folio, $clave);
-    
-  $stmtActualizarExistente = $enlace->prepare("UPDATE devolucion SET cantidad = ? where folio_venta = ? AND clave_producto = ?");
-  $stmtActualizarExistente->bind_param("iii", $cantidadActualizar, $folio, $clave);
+  $stmtRegistroDevolucion->execute();
   
   foreach($_SESSION["devolucion"] as $id=>$info){
     $existeDevolucion = false;
     $clave = $id;
     $cantidadDevolver = $_SESSION["devolucion"][$id]["cantidad"];
     $motivo = $_SESSION["devolucion"][$id]["motivo"];
-    
-    $stmtVerificarExistente->execute();
-    $resultado = $stmtVerificarExistente->get_result();
-    if($resultado->num_rows != 0){
-      $row = $resultado->fetch_assoc();
-      $cantidadDevuelta = $row["cantidad"];
-      $cantidadActualizar = $cantidadDevuelta + $cantidadDevolver;
-      $existeDevolucion = true;
-    }
     
     $stmtVerificarCantidad->execute();
     $resultado = $stmtVerificarCantidad->get_result();
@@ -57,20 +48,13 @@ if($dineroCaja){
     $cantidadGenerada += $cantidadDevolver;
     
     $stmtActualizarStock->execute();
-    
-    if(!$existeDevolucion){
-      $stmtRegistroDevolucion->execute();
-    }
-    else{
-      $stmtActualizarExistente->execute();
-    }
+    $stmtRegistroDetalle->execute();
   }
   
   $stmtRegistroDevolucion->close();
   $stmtActualizarStock->close();
   $stmtVerificarCantidad->close();
-  $stmtVerificarExistente->close();
-  $stmtActualizarExistente->close();
+  $stmtRegistroDetalle->close();
   
   echo "Se ha registrado la devolución de manera exitosa!";
 }

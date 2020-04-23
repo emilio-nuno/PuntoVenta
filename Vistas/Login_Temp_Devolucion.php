@@ -1,5 +1,9 @@
 <?php
- session_start();
+ session_start(); //este programa generará las variables $_SESSION["cargo"] = 1 si Supervisor y 0 si no y $_SESSION["empleado"] = rfc
+
+/*TODO:
+*Eliminar esta vista porque cuando integremos los archivos, el Login_Empleado será suficiente
+*/
 
 //Inicializar variables para conexión a BD
 $servidor="localhost";
@@ -14,25 +18,28 @@ if(!$enlace){
 }
 
 // Define variables and initialize with empty values
-$folio = "";
-$folio_err = "";
+$rfc = "";
+$rfc_err = "";
  
 // Processing form data when form is submitted
 if($_SERVER["REQUEST_METHOD"] == "POST"){
     // Validate username
-    if(empty(trim($_POST["folio"]))){
-        $folio_err = "Por favor inserte un folio.";
+    if(empty(trim($_POST["rfc"]))){
+        $rfc_err = "Por favor inserte un RFC.";
+    }
+    elseif(strlen($_POST["rfc"]) < 13){
+        $rfc_err = "El RFC debe tener 13 caracteres";
     }
     else{
         // Prepare a select statement
-        $sql = "SELECT folio_venta, fecha_venta FROM venta WHERE folio_venta = ?";
+        $sql = "SELECT cargo FROM empleado WHERE rfc_empleado = ?";
         
         if($stmt = mysqli_prepare($enlace, $sql)){
             // Bind variables to the prepared statement as parameters
-            mysqli_stmt_bind_param($stmt, "i", $param_folio);
+            mysqli_stmt_bind_param($stmt, "s", $param_rfc);
             
             // Set parameters
-            $param_folio = trim($_POST["folio"]);
+            $param_rfc = trim($_POST["rfc"]);
             
             // Attempt to execute the prepared statement
             if(mysqli_stmt_execute($stmt)){
@@ -41,13 +48,13 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 $row = $resultado->fetch_assoc();
                 
                 if($resultado->num_rows == 1){
-                    $folio = trim($_POST["folio"]); //hacer que este sea el éxito
-                    $_SESSION["folio_venta"]= $folio;
-                    $_SESSION["fecha"] = $row["fecha_venta"];
-                    header("Location: Devolucion.php");
+                    $rfc = trim($_POST["rfc"]); //hacer que este sea el éxito
+                    $_SESSION["empleado"]= $rfc;
+                    //hay dos valores, empleado y supervisor
+                    header("Location: Inicio_Devolucion.php");
                     exit;
                 } else{
-                    echo "El folio de venta no existe en la base de datos.";
+                    echo "El RFC ingresado no se encuentra registrado.";
                 }
             // Close statement
             mysqli_stmt_close($stmt);
@@ -63,7 +70,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Log-In de Cliente</title>
+    <title>Log-In</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.css">
     <style type="text/css">
         body{ font: 14px sans-serif; }
@@ -73,12 +80,12 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 <body>
     <div class="wrapper">
         <h2>Log-In</h2>
-        <p>Por favor digite el folio de venta cara comenzar la devolución.</p>
+        <p>Por favor inicie sesión, empleado.</p>
         <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
-            <div class="form-group <?php echo (!empty($folio_err)) ? 'has-error' : ''; ?>">
-                <label>Folio</label>
-                <input type="text" name="folio" class="form-control" value="<?php echo $folio; ?>">
-                <span class="help-block"><?php echo $folio_err; ?></span>
+            <div class="form-group <?php echo (!empty($rfc_err)) ? 'has-error' : ''; ?>">
+                <label>RFC</label>
+                <input type="text" name="rfc" class="form-control" value="<?php echo $rfc; ?>">
+                <span class="help-block"><?php echo $rfc_err; ?></span>
             </div>    
             <div class="form-group">
                 <input type="submit" class="btn btn-primary" value="Submit">

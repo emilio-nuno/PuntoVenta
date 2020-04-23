@@ -59,7 +59,7 @@ if($meses > 0){
 if(isset($_POST["devolver"])){
   $clave = trim($_POST["clave"]);
   $stmt = $enlace->prepare("SELECT cantidad FROM detalle_venta WHERE folio_venta = ? AND clave_producto = ?");
-  $stmt->bind_param("ii", $_SESSION["folio"], $clave);
+  $stmt->bind_param("ii", $_SESSION["folio_venta"], $clave);
   $stmt->execute();
   $result = $stmt->get_result();
   if($result->num_rows === 0){
@@ -69,8 +69,21 @@ if(isset($_POST["devolver"])){
     $row = $result->fetch_assoc();
     $cantidadComprada = $row["cantidad"];
     
-    $stmtValidar = $enlace->prepare("SELECT cantidad FROM devolucion WHERE clave_producto = ? AND folio_venta = ?");
-    $stmtValidar->bind_param("ii", $clave, $_SESSION["folio"]);
+    $stmtFolioActual = $enlace->prepare("SELECT folio_devolucion FROM devolucion ORDER BY folio_devolucion DESC LIMIT 1"); //hacer lo mismo en venta
+    $stmtFolioActual->execute();
+    $result = $stmtFolioActual->get_result();
+    if($result->num_rows == 0){
+      $folio = 1;
+    }
+    else{
+      $row = $result->fetch_assoc();
+      $folio = $row["folio_devolucion"] + 1;
+    }
+    
+    $_SESSION["folio_actual"] = $folio;
+
+    $stmtValidar = $enlace->prepare("SELECT cantidad FROM detalle_devolucion WHERE clave_producto = ? AND folio_devolucion = ?");
+    $stmtValidar->bind_param("ii", $clave, $folio);
     $stmtValidar->execute();
     $result = $stmtValidar->get_result();
     if($result->num_rows != 0){
