@@ -81,23 +81,25 @@ if(isset($_POST["devolver"])){
     }
     
     $_SESSION["folio_actual"] = $folio;
+    $cantidadDevuelta = 0;
+    
+    $folio_venta = $_SESSION["folio_venta"];
 
-    $stmtValidar = $enlace->prepare("SELECT cantidad FROM detalle_devolucion WHERE clave_producto = ? AND folio_devolucion = ?");
-    $stmtValidar->bind_param("ii", $clave, $folio);
+    $stmtValidar = $enlace->prepare("SELECT clave_producto, cantidad FROM detalle_devolucion WHERE folio_devolucion IN (SELECT folio_devolucion FROM devolucion WHERE folio_venta = ?)");
+    $stmtValidar->bind_param("i", $folio_venta);
     $stmtValidar->execute();
     $result = $stmtValidar->get_result();
     if($result->num_rows != 0){
-      $row = $result->fetch_assoc();
-      $cantidadDevuelta = $row["cantidad"];
-    }
-    else{
-      $cantidadDevuelta = 0;
+      while($row = $result->fetch_assoc()){
+        if($row["clave_producto"] == $clave){
+          $cantidadDevuelta += $row["cantidad"];
+        }
+      }
     }
     
     if($cantidadComprada < $_POST["cantidad"] or $_POST["cantidad"] > ($cantidadComprada - $cantidadDevuelta)){
       echo "Estás intentando regresar más productos de los que compraste";
     }
-    
     else{
       $_SESSION["devolucion"][$clave]["cantidad"] = $_POST["cantidad"];
       $_SESSION["devolucion"][$clave]["motivo"] = $_POST["motivo"];
