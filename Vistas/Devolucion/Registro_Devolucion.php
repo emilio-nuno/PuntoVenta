@@ -62,3 +62,64 @@ else{
   echo "No hay suficiente dinero en caja para realizar la devolución. Intente luego!";
 }
 ?>
+
+<DOCTYPE !html>
+<html>
+  <head>
+    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css" integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
+    <title>Hola mundo!</title>
+  </head>
+  <body>
+    <form method="post">
+      <input type="submit" name="terminar" value="Salir de la Devolución" class="pure-button pure-button-primary">
+    </form>
+  </body>
+  </html>
+  
+<?php
+if($dineroCaja){
+  $f_venta = $_SESSION["folio_venta"];
+  $f_dev = $_SESSION["folio_actual"];
+  $rfc_emp = $_SESSION["empleado"];
+  
+  
+  echo "El RFC del empleado que le atendió es: " . $rfc_emp . "<br>";
+  echo "El folio de la devolución actual es: " . $f_dev . "<br>";
+  echo "El folio de la venta asociada a esta devolución es: " . $f_venta . "<br>";
+  echo "La fecha actual es: " . date("d-m-Y") . "<br><br>";
+  
+?>
+<table class="pure-table" id="productos">
+        <thead>
+          <legend>Productos Aceptados para Devolución</legend><br>
+            <tr>
+              <th>ID</th>
+              <th>Cantidad</th>
+              <th>Motivo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+          <?php
+          foreach($_SESSION["devolucion"] as $id=>$info){
+          ?>
+          <tr>
+            <td><?=$id?></td>
+            <td><?=$_SESSION["devolucion"][$id]["cantidad"]?></td>
+            <td><?=$_SESSION["devolucion"][$id]["motivo"]?></td>
+          </tr>
+        <?php
+        }
+        ?>
+        </tbody>
+      </table> 
+<?php
+}
+?>
+  
+<?php
+if(isset($_POST["terminar"])){
+  header("Location: Inicio_Devolucion.php");
+  exit();
+}  
+?>

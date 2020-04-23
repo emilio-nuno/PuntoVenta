@@ -1,5 +1,6 @@
 <?php
  session_start();
+  $_SESSION["devolucion"] = array(); //Reniciamos las devoluciones
 
 //Inicializar variables para conexión a BD
 $servidor="localhost";
