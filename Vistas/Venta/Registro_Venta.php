@@ -72,7 +72,7 @@ echo "La fecha actual es: " . date("d-m-Y") . "<br><br>";
   
 <?php
 if(isset($_POST["terminar"])){
-  header("Location: VerificarCliente.php");
+  header("Location: Verificar_Cliente.php");
   exit();
 }  
 ?>

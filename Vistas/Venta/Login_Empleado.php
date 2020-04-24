@@ -1,6 +1,8 @@
 <?php
  session_start(); //este programa generará las variables $_SESSION["cargo"] = 1 si Supervisor y 0 si no y $_SESSION["empleado"] = rfc
-
+/*TODO:
+*Agregar permisos para tipo de empleado Almacenista
+*/
 //Inicializar variables para conexión a BD
 $servidor="localhost";
 $usuario="root";
@@ -49,7 +51,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     //hay dos valores, empleado y supervisor
                     $nivel = $row["cargo"] == "Supervisor" ? 1 : 0;
                     $_SESSION["cargo"] = $nivel;
-                    header("Location: VerificarCliente.php");
+                    header("Location: Verificar_Cliente.php");
                     exit;
                 } else{
                     echo "El RFC ingresado no se encuentra registrado.";
