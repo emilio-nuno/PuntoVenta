@@ -1,5 +1,11 @@
 <?php
 session_start();
+
+if(isset($_POST["terminar"])){
+  header("Location: Inicio_Devolucion.php");
+  exit();
+}
+
 $servidor="localhost";
 $usuario="root";
 $clave="";
@@ -12,7 +18,6 @@ if(mysqli_connect_errno()){
 }
 /*TODO
 *Agregar funcionalidad con dinero en caja real
-*Cambiar la manera en que se registra la cantidad de productos para que una devolucion que tome lugar en diferentes fechas del mismo producto no se registren en dos ocasiones. Por ejemplo de devuelve un producto 1 un dia y el otro dia se devuelve un producto 1 entonces en el registro debe tomar esa devolucion de 1 y cambiar la cantidad a 2
 */
 $dineroCaja = true;
 if($dineroCaja){
@@ -36,7 +41,6 @@ if($dineroCaja){
   $stmtRegistroDevolucion->execute();
   
   foreach($_SESSION["devolucion"] as $id=>$info){
-    $existeDevolucion = false;
     $clave = $id;
     $cantidadDevolver = $_SESSION["devolucion"][$id]["cantidad"];
     $motivo = $_SESSION["devolucion"][$id]["motivo"];
@@ -115,11 +119,4 @@ if($dineroCaja){
       </table> 
 <?php
 }
-?>
-  
-<?php
-if(isset($_POST["terminar"])){
-  header("Location: Inicio_Devolucion.php");
-  exit();
-}  
 ?>

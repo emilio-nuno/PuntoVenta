@@ -40,16 +40,25 @@
     
 <?php
     if(isset($_POST['confirmar'])){
+        $folio = 0;
         //venta: folio que es autoincrementable, fecha, que conseguiremos en php, rfc de empleado y rfc de cliente, se registra solo una
         //detalle_Venta: folio, clave de producto, cantidad, valor unitario e iva crear uno para cada producto
         $consultarDatos = "SELECT folio_venta FROM venta ORDER BY folio_venta DESC LIMIT 1";
         $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
-        $row = mysqli_fetch_array($ejecutarConsultar);
+      
+        $rows = mysqli_num_rows($ejecutarConsultar);
+        if($rows == 0){
+          $folio = 1;
+        }
+        else{
+          $row = mysqli_fetch_array($ejecutarConsultar);
+          $folio = $row["folio_venta"]; //se guarda como cadena, entonces lo convertimos a int
+          $folio = (int)$folio;
+          $folio += 1;
+        }
         
-        $folio = $row["folio_venta"]; //se guarda como cadena, entonces lo convertimos a int
-        $folio = (int)$folio;
-        $folio += 1;
-        
+        $_SESSION["folio_venta"] = $folio;
+    
         $fecha = date("Y-m-d");
         $rfc_emp = $_SESSION["empleado"];
         $rfc_cli = $_SESSION["cliente"];
@@ -81,7 +90,7 @@
             $row = mysqli_fetch_array($ejecutarConsultar);
         }
         
-        header("Location: VerificarCliente.php");
+        header("Location: Registro_Venta.php");
         exit();
     }
 ?>

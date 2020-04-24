@@ -1,5 +1,6 @@
 <?php
  session_start(); //este programa generará las variables $_SESSION["cargo"] = 1 si Supervisor y 0 si no y $_SESSION["empleado"] = rfc
+$_SESSION["orden"] = []; //Vaciamos el carrito anterior
 
 //Inicializar variables para conexión a BD
 $servidor="localhost";
