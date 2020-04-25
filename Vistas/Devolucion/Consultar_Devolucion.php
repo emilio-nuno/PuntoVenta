@@ -19,7 +19,7 @@ $stmtFolioVentaMax = $enlace->prepare("SELECT folio_venta FROM venta ORDER BY fo
 $stmtFolioVentaMax->execute();
 $resultado = $stmtFolioVentaMax->get_result();
 if($resultado->num_rows == 0){
-  echo "No puede consultar porque no hay ninguna venta registrada... Intente después";
+  echo "No puede consultar porque no hay ninguna devolución registrada... Intente después";
   header("Location: Inicio_Devolucion.php"); //Probablemente iremos a algún menú que tendremos luego
   exit();
 }
