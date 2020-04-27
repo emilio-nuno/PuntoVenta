@@ -36,6 +36,7 @@ $stmtConseguirFoliosDia->close();
 
 $totalVentas = 0;
 $totalDevoluciones = 0;
+$totalFlujos = 0;
 ?>
 
 <DOCTYPE !html>
@@ -94,6 +95,7 @@ $stmtConseguirFolios = $enlace->prepare("SELECT folio_devolucion FROM devolucion
 $stmtConseguirFolios->bind_param("s", $fecha);
 $stmtConseguirFolios->execute();
 $foliosDevolucion = $stmtConseguirFolios->get_result();
+$stmtConseguirFolios->close();
 
 $stmtTotalFolio = $enlace->prepare("SELECT folio_devolucion, SUM(monto_total) as monto_devolucion FROM devoluciones_dia WHERE folio_devolucion = ?");
 $stmtTotalFolio->bind_param("i", $folioDevolucion);
@@ -128,3 +130,72 @@ $stmtTotalFolio->bind_param("i", $folioDevolucion);
       <td><?=$totalDevoluciones?></td>
     </tfoot>
 </table>
+  
+<?php
+$stmtTotalFolio->close();
+
+$stmtConseguirFlujos = $enlace->prepare("SELECT folio_flujo, monto, hora FROM flujo_efectivo WHERE DATEDIFF(fecha, ?) = 0 ");
+$stmtConseguirFlujos->bind_param("s", $fecha);
+$stmtConseguirFlujos->execute();
+    
+$foliosFlujo = $stmtConseguirFlujos->get_result(); //para flujos es una simple consulta
+        
+$stmtConseguirFlujos->close();
+?>
+  
+<table class="pure-table">
+    <thead>
+      <br><legend>Flujo Efectivo</legend><br>
+        <tr>
+            <th>Folio</th>
+            <th>Monto</th>
+            <th>Hora</th>
+        </tr>
+    </thead>
+
+    <tbody>
+      <?php while($tuplaFolio = $foliosFlujo->fetch_assoc()){ 
+              $totalFlujos += $tuplaFolio["monto"];
+      ?>
+      <tr>
+        <td><?=$tuplaFolio["folio_flujo"]?></td>
+        <td><?=$tuplaFolio["monto"]?></td>
+        <td><?=$tuplaFolio["hora"]?></td>
+      </tr>
+      <?php } ?>
+    </tbody>
+  
+    <tfoot>
+      <th>Total</th>
+      <td><?=$totalFlujos?></td>
+    </tfoot>
+</table>
+
+<p><strong>TOTAL VOUCHERS: <?=$totalVentas - $totalDevoluciones?></strong></p>
+<p><strong>TOTAL EFECTIVO: <?=$totalVentas - $totalDevoluciones - $totalFlujos?></strong></p>
+  
+<?php
+  $rfc_emp = "1234567890121"; //cambiar estos a valores dados por $_SESSION[]
+  $rfc_geren = "1234567890123";
+        
+  $rfcs = [$rfc_emp, $rfc_geren];
+  $nombres = [];
+        
+  $stmtConseguirNombreEmpleado = $enlace->prepare("SELECT nombre_empleado FROM empleado WHERE rfc_empleado = ?");
+  $stmtConseguirNombreEmpleado->bind_param("s", $rfc);
+        
+  foreach($rfcs as $valor){
+    $rfc = $valor;
+    $stmtConseguirNombreEmpleado->execute();
+    $resultadoNombre = $stmtConseguirNombreEmpleado->get_result();
+    $tuplaNombre = $resultadoNombre->fetch_assoc();
+    array_push($nombres, $tuplaNombre["nombre_empleado"]);
+  }
+
+  $stmtConseguirNombreEmpleado->close();
+?>
+  
+<p style="display: inline-block;
+    vertical-align: top; width: 10%"><?=$nombres[0]?><br>Nombre Empleado<br>Entrega</p>
+<p style="display: inline-block;
+    vertical-align: top;"><?=$nombres[1]?><br>Nombre Gerente<br>Recibe</p>
