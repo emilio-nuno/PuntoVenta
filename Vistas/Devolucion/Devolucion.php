@@ -2,7 +2,6 @@
  session_start();
 /*TODO:
 *Meter validación de producto sin descuento
-*Meter validación de que no se devuelvan más productos de los que se compraron con varias devoluciones al checar si hay un registro en la tabla de devoluciones con el folio y la clave de producto y a base de la cantidad que tenga en la devolución definimos la cantidad de productos que podemos devolver
 */
 
 //Inicializar variables para conexión a BD

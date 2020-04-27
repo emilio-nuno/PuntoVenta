@@ -1,7 +1,7 @@
 <?php
 /*TODO
 *Agregar funcionalidad de dinero en caja para motivos de  devoluciones
-*Agregar validación de si tabla venta está vacía
+*Agregar columna descuento para calcular el descuento
 */
     session_start();
 
