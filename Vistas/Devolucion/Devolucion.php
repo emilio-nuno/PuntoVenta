@@ -2,6 +2,7 @@
  session_start();
 /*TODO:
 *Meter validación de producto sin descuento
+*Meter validacion de no poder generar la devolucion si no existe suficiente dinero en caja
 */
 
 //Inicializar variables para conexión a BD
