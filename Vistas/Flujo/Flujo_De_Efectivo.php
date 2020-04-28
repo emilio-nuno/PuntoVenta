@@ -27,7 +27,7 @@ if($resultado->num_rows == 0){
 }
 else{
   $tupla = $resultado->fetch_assoc();
-  $folioActual = $tupla["folio_flujo"];
+  $folioActual = $tupla["folio_flujo"] += 1;
 }
 ?>
 
