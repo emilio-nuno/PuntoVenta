@@ -13,7 +13,7 @@ if(mysqli_connect_errno()){
   echo "Conexión a la base de datos fallida";
 }
 
-$cantidadActual = 12000; //la cantidad actual en caja después de la última venta, pero para activar el flujo debe rebasar los 10000 pesos
+$cantidadActual = 10000; //la cantidad actual en caja después de la última venta, pero para activar el flujo debe rebasar los 10000 pesos
 $cantidadRetiro = abs(2000 - $cantidadActual); //sacamos la cantidad que debemos retirar para dejar 2 mil pesos
 $rfc_empleado = "1234567890129"; //esto lo vamos a saber cuando conectemos todos los archivos
 $fecha = date("Y-m-d");

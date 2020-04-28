@@ -25,10 +25,10 @@ if(mysqli_connect_errno()){
       <label for="motivo">Motivo</label>
       
       <select id="motivo" name="motivo" required>
-        <option value="compra_cliente">Compra de Cliente</option>
-        <option value="devolucion_proveedor">Devolución a Proovedor</option>
-        <option value="compra_proveedor">Compra a Proveedor</option>
-        <option value="devolucion_cliente">Devolución de Cliente</option>
+        <option value="compra_cliente">Salida - Compra de Cliente</option>
+        <option value="devolucion_proveedor">Salida - Devolución a Proovedor</option>
+        <option value="compra_proveedor">Entrada - Compra a Proveedor</option>
+        <option value="devolucion_cliente">Entrada - Devolución de Cliente</option>
       </select>
       
       <label for="tipo">Tipo de Movimiento</label>
