@@ -1,6 +1,7 @@
 <?php
 /*TODO:
 *Agregar funcionalidad pare regresar a a menú principal
+*Agregar funcionalidad para mostrar rfc de empleado que generó el ajuste
 */
 $servidor="localhost";
 $usuario="root";

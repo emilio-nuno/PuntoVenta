@@ -1,5 +1,8 @@
 <?php
 session_start();
+/*TODO:
+*Agregar inserción de rfc de empleado en la tabla ajuste_inventario
+*/
 
 $servidor="localhost";
 $usuario="root";

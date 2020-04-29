@@ -1,3 +1,8 @@
+<?php
+session_start();
+$_SESSION["dinero_caja"] = 2000; //Inicializamos la caja con una valor de 2000
+?>
+
 <!doctype html>
 
 <html lang="en">
@@ -24,6 +29,7 @@
             </button>
             <div class="dropdown-content">
               <a href="../Vistas/Venta/Verificar_Cliente.php">Comenzar Venta</a>
+              <a href="../Vistas/Venta/Consultar_Venta.php">Consultar Ventas</a>
             </div>
         </div>
       <div class="dropdown">
@@ -32,6 +38,7 @@
             </button>
             <div class="dropdown-content">
               <a href="../Vistas/Devolucion/Inicio_Devolucion.php">Comenzar Devolución</a>
+              <a href="../Vistas/Devolucion/Consultar_Devolucion.php">Consultar Devolución</a>
             </div>
         </div> 
     </div>

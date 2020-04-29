@@ -14,8 +14,8 @@ if(mysqli_connect_errno()){
   echo "Conexión a la base de datos fallida";
 }
 
-//$fecha = date("Y-m-d");
-$fecha = "2020-04-23"; //solo para probar, reemplazar por fecha actual
+$fecha = date("Y-m-d");
+//$fecha = "2020-04-23"; //solo para probar, reemplazar por fecha actual
 
 $stmtConseguirInfoVentas = $enlace->prepare("CREATE TEMPORARY TABLE desglose_dia SELECT folio_venta, clave_producto, cantidad, valor_unitario, valor_unitario * cantidad as total FROM detalle_venta WHERE folio_venta IN (SELECT folio_venta FROM venta WHERE DATEDIFF(fecha_venta, ?) = 0)");
 $stmtConseguirInfoVentas->bind_param("s", $fecha);
@@ -175,7 +175,7 @@ $stmtConseguirFlujos->close();
   
 <?php
   $rfc_emp = "1234567890121"; //cambiar estos a valores dados por $_SESSION[]
-  $rfc_geren = "1234567890123";
+  $rfc_geren = $_SESSION["empleado"]; //aqui guardamos el valor del rfc actual y solo pueden entrar a esta vista los gerentes
         
   $rfcs = [$rfc_emp, $rfc_geren];
   $nombres = [];
