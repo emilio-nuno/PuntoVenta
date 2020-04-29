@@ -32,11 +32,6 @@
     <p>Aquí se muestra el IVA</p>
     <p>Aquí se muestra el total + IVA</p>
 </div>
-
-<form class="pure-form" method="post">
-    <input type="text" class="pure-input-rounded" placeholder="Departamento" name="busqueda">
-    <button type="submit" class="pure-button" name="buscar" value="buscando">Buscar</button>
-</form>
     
 <?php
     if(isset($_POST['confirmar'])){
@@ -95,46 +90,6 @@
     }
 ?>
     
-<?php
-    if(isset($_POST['buscar'])){
-        $criterioBuscar = $_POST['busqueda'];
-        $consultarDatos = "SELECT * FROM producto where departamento = '$criterioBuscar'";
-        $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
-?>
-
-<table class="pure-table" id="productos">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Descripción</th>
-            <th>Stock</th>
-            <th>Departamento</th>
-            <th>Precio</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-        <?php
-        while($row = mysqli_fetch_array($ejecutarConsultar)) {
-        ?>
-        <tr>
-            <td><?=$row["clave_producto"]?></td>
-            <td><?=$row["nombre"]?></td>
-            <td><?=$row["descripcion"]?></td>
-            <td><?=$row["cantidad"]?></td>
-            <td><?=$row["departamento"]?></td>
-            <td><?=$row["precio"]?></td>
-        </tr>
-        <?php
-        }
-        ?>
-    </tbody>
-</table>
-<?php
-    }
-?>
-
 <form class="pure-form" method="post" id="miFormulario">
     <fieldset>
 

@@ -25,7 +25,7 @@ $meses = floor(($dif - $anos * 365*60*60*24) / (30*60*60*24));
 
 if($meses > 0){
     header("Location: Inicio_Devolucion.php");
-    exit;
+    exit();
 }
 ?>
 
@@ -138,6 +138,6 @@ if(isset($_POST["devolver"])){
 <?php
 if(isset($_POST["confirmar"])){
   header("Location: Gerente_Autorizar.php");
-  exit;
+  exit();
 }
 ?>

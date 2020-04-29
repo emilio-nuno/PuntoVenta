@@ -52,7 +52,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     $_SESSION["empleado"]= $rfc;
                     //hay dos valores, empleado y supervisor
                     header("Location: Inicio_Devolucion.php");
-                    exit;
+                    exit();
                 } else{
                     echo "El RFC ingresado no se encuentra registrado.";
                 }
