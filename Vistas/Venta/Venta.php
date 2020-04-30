@@ -16,6 +16,30 @@
     if(!$enlace){
         echo "Error en la conexion del servidor";
     }
+
+    $consultarDatos = "SELECT folio_venta FROM venta ORDER BY folio_venta DESC LIMIT 1";
+    $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
+      
+    $rows = mysqli_num_rows($ejecutarConsultar);
+    if($rows == 0){
+      $folio = 1;
+    }
+    else{
+      $row = mysqli_fetch_array($ejecutarConsultar);
+      $folio = $row["folio_venta"]; //se guarda como cadena, entonces lo convertimos a int
+      $folio = (int)$folio;
+      $folio += 1;
+    }
+    
+    $stmtInfoCliente = $enlace->prepare("SELECT nombre, domicilio FROM cliente WHERE rfc = ?");
+    $stmtInfoCliente->bind_param("s" ,$_SESSION["cliente"]);
+    $stmtInfoCliente->execute();
+
+    $infoCliente = $stmtInfoCliente->get_result();
+    
+    $tuplaInfoCliente = $infoCliente->fetch_assoc();
+    $nomCliente = $tuplaInfoCliente["nombre"];
+    $dirCliente = $tuplaInfoCliente["domicilio"];
 ?>
 
  <!DOCTYPE html>
@@ -34,36 +58,21 @@
 </div>
     
 <?php
-    if(isset($_POST['confirmar'])){
-        $folio = 0;
-        //venta: folio que es autoincrementable, fecha, que conseguiremos en php, rfc de empleado y rfc de cliente, se registra solo una
-        //detalle_Venta: folio, clave de producto, cantidad, valor unitario e iva crear uno para cada producto
-        $consultarDatos = "SELECT folio_venta FROM venta ORDER BY folio_venta DESC LIMIT 1";
-        $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
-      
-        $rows = mysqli_num_rows($ejecutarConsultar);
-        if($rows == 0){
-          $folio = 1;
-        }
-        else{
-          $row = mysqli_fetch_array($ejecutarConsultar);
-          $folio = $row["folio_venta"]; //se guarda como cadena, entonces lo convertimos a int
-          $folio = (int)$folio;
-          $folio += 1;
-        }
-        
+    if(isset($_POST['confirmar'])){ 
         $_SESSION["folio_venta"] = $folio;
     
         $fecha = date("Y-m-d");
         $rfc_emp = $_SESSION["empleado"];
         $rfc_cli = $_SESSION["cliente"];
       
+        $metodo = $_POST["metodo"];
+      
         $consultarDatos = "SELECT porcentaje FROM iva ORDER BY ABS(DATEDIFF(fecha, '$fecha')) LIMIT 1"; //conseguimos el porcentaje de IVA de la fecha más cercana a la actual
         $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
         $row = mysqli_fetch_array($ejecutarConsultar);
         $porcentaje =  $row["porcentaje"];
         
-        $consultarDatos = "INSERT INTO venta(fecha_venta, rfc_empleado, id_cliente, iva) values ('$fecha', '$rfc_emp', '$rfc_cli', $porcentaje)"; //registramos venta
+        $consultarDatos = "INSERT INTO venta(fecha_venta, rfc_empleado, id_cliente, iva, metodo_pago) values ('$fecha', '$rfc_emp', '$rfc_cli', $porcentaje, '$metodo')"; //registramos venta
         $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
         
         foreach($_SESSION["orden"] as $id=>$info){
@@ -89,7 +98,13 @@
         exit();
     }
 ?>
-    
+
+<p>Folio de la venta actual: <?=$folio?></p>
+<p>Fecha actual: <?=date("Y-m-d")?></p>
+<p>RFC de Cliente: <?=$_SESSION["cliente"]?></p>
+<p>Nombre del Cliente: <?=$nomCliente?></p>
+<p>Domicilio del Cliente: <?=$dirCliente?></p>
+
 <form class="pure-form" method="post" id="miFormulario">
     <fieldset>
 
@@ -104,8 +119,12 @@
     
 </div>
     
-<form method="post">
-        <input type="submit" class="pure-button" name="confirmar" value="Confirmar">
+<form method="post"> <!--Tal vez pasar esta funcionalidad a otro lugar-->
+    <label for="metodoEfectivo">Efectivo</label>
+    <input id="metodoEfectivo" name="metodo" type="radio" value="efectivo">
+    <label for="metodoCredito">Crédito</label>
+    <input id="metodoCredito" name="metodo" type="radio" value="credito"><br>
+    <input type="submit" class="pure-button" name="confirmar" value="Confirmar">
 </form>
     
 </body>
