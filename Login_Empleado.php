@@ -1,8 +1,7 @@
 <?php
  session_start();
-/*TODO:
-*Agregar permisos para tipo de empleado Almacenista
-*/
+
+$_SESSION["dinero_caja"] = 2000; //Inicializamos la caja con una valor de 2000
 
 //Inicializar variables para conexión a BD
 $servidor="localhost";

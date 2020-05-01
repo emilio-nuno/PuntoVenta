@@ -13,6 +13,10 @@ if(mysqli_connect_errno()){
 ?>
   
 <?php
+echo "Dinero en caja: " . $_SESSION["dinero_caja"];
+
+$cantidadCaja = $_SESSION["dinero_caja"]; //variable para validar destino de redireccion si es mayor a 10k entonces se va a flujo y si no al menu principal
+
 $folio_venta = $_SESSION["folio_venta"];
 $rfc_emp = $_SESSION["empleado"];
 $rfc_cli = $_SESSION["cliente"];
@@ -72,7 +76,13 @@ echo "La fecha actual es: " . date("d-m-Y") . "<br><br>";
   
 <?php
 if(isset($_POST["terminar"])){
-  header("Location: ../../Pantallas/Vendedor.php");
-  exit();
+  if($cantidadCaja > 10000){
+    header("Location: ../Flujo/Gerente_Autorizar.php");
+    exit();
+  }
+  else{
+    header("Location: ../../Pantallas/Vendedor.php");
+    exit();
+  }
 }  
 ?>

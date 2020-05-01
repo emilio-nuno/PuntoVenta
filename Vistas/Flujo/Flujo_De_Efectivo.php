@@ -1,7 +1,5 @@
 <?php
-/*TODO:
-*Agregar variable de sesión de dinero en caja y conectarla a cantidadActual
-*/
+session_start();
 
 $servidor="localhost";
 $usuario="root";
@@ -13,9 +11,9 @@ if(mysqli_connect_errno()){
   echo "Conexión a la base de datos fallida";
 }
 
-$cantidadActual = 10000; //la cantidad actual en caja después de la última venta, pero para activar el flujo debe rebasar los 10000 pesos
+$cantidadActual = $_SESSION["dinero_caja"]; //la cantidad actual en caja después de la última ventas
 $cantidadRetiro = abs(2000 - $cantidadActual); //sacamos la cantidad que debemos retirar para dejar 2 mil pesos
-$rfc_empleado = "1234567890129"; //esto lo vamos a saber cuando conectemos todos los archivos
+$rfc_empleado = $_SESSION["empleado"];
 $fecha = date("Y-m-d");
 $hora = date("H:i");
 
@@ -37,7 +35,8 @@ if(isset($_POST["confirmar"])){
   $stmtInsertarFlujo->bind_param("sssi", $fecha, $hora, $rfc_empleado, $_POST["cantidad"]);
   $stmtInsertarFlujo->execute();
   $stmtInsertarFlujo->close();
-  exit(); //aqui saldremos al menu principal o pantalla de venta
+  header("Location: ../../Pantallas/Vendedor.php");
+  exit();
 }
 ?>
 

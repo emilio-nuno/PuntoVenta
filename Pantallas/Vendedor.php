@@ -1,6 +1,6 @@
 <?php
 session_start();
-$_SESSION["dinero_caja"] = 2000; //Inicializamos la caja con una valor de 2000
+echo $_SESSION["dinero_caja"];
 ?>
 
 <!doctype html>

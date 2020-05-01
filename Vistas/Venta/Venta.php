@@ -1,6 +1,5 @@
 <?php
 /*TODO
-*Agregar funcionalidad de dinero en caja para motivos de  devoluciones
 *Agregar columna descuento para calcular el descuento
 */
     session_start();
@@ -74,12 +73,19 @@
         
         $consultarDatos = "INSERT INTO venta(fecha_venta, rfc_empleado, id_cliente, iva, metodo_pago) values ('$fecha', '$rfc_emp', '$rfc_cli', $porcentaje, '$metodo')"; //registramos venta
         $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
+      
+        $dineroGenerado = 0; //con esto aumentaremos la cantidad de dinero total en caja
         
         foreach($_SESSION["orden"] as $id=>$info){
             $clave_producto = $id;
             $cantidad_producto = $_SESSION["orden"][$id]["cantidad"];
             $valor_unitario = $_SESSION["orden"][$id]["precio"];
+          
             
+            for($i = 0; $i < $cantidad_producto; $i++){
+              $dineroGenerado += $valor_unitario;
+            }
+
             $consultarDatos = "INSERT INTO detalle_venta(folio_venta,  clave_producto, cantidad, valor_unitario) values ($folio, $id, $cantidad_producto, $valor_unitario)"; //registramos un detalle por cada producto en la canasta
             $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
             
@@ -94,6 +100,10 @@
             $row = mysqli_fetch_array($ejecutarConsultar);
         }
         
+        if($metodo != "credito"){
+          $_SESSION["dinero_caja"] += $dineroGenerado; //solo modificamos el valor de efectivo en caja cuando la venta se hace con efectivo 
+        }
+      
         header("Location: Registro_Venta.php");
         exit();
     }

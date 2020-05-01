@@ -1,8 +1,5 @@
 <?php
 session_start();
-/*TODO:
-*Agregar tabla de metodo de pago a venta
-*/
 
 $servidor="localhost";
 $usuario="root";
