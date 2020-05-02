@@ -27,6 +27,26 @@ if($meses > 0){
     header("Location: Inicio_Devolucion.php");
     exit();
 }
+
+$stmtFolioActualPrincipio = $enlace->prepare("SELECT folio_devolucion FROM devolucion ORDER BY folio_devolucion DESC LIMIT 1"); //hacer lo mismo en venta
+$stmtFolioActualPrincipio->execute();
+$result = $stmtFolioActualPrincipio->get_result();
+if($result->num_rows == 0){
+  $folio = 1;
+}
+else{
+  $row = $result->fetch_assoc();
+  $folio = $row["folio_devolucion"] + 1;
+}
+
+$stmtInfoEmpleado = $enlace->prepare("SELECT nombre_empleado FROM empleado WHERE rfc_empleado = ?");
+$stmtInfoEmpleado->bind_param("s" ,$_SESSION["empleado"]);
+$stmtInfoEmpleado->execute();
+
+$infoEmpleado = $stmtInfoEmpleado->get_result();
+    
+$tuplaInfoEmpleado= $infoEmpleado->fetch_assoc();
+$nomEmpleado = $tuplaInfoEmpleado["nombre_empleado"];
 ?>
 
 <!DOCTYPE html>
@@ -37,6 +57,12 @@ if($meses > 0){
 </head>
 
 <body>
+  <p>Le atiende: <strong><?=$nomEmpleado?></strong></p>
+  
+  <p>Folio de la devolución actual: <?=$folio?></p>
+  <p>Fecha actual: <?=date("Y-m-d")?></p>
+  <p>Venta asociada a esta Devolución: <?=$_SESSION["folio_venta"]?></p>
+  
   <p>Vendedor, por favor <span style="color:red;">verifique</span> los productos entregados por el cliente antes de llenar el formulario para cada producto</p>
   <form class="pure-form" method="post">
     <fieldset>
@@ -136,8 +162,26 @@ if(isset($_POST["devolver"])){
 ?>
 
 <?php
-if(isset($_POST["confirmar"])){
-  header("Location: Gerente_Autorizar.php");
-  exit();
+if(isset($_POST["confirmar"])){ //aqui verificamos si se puede proceder con la devolucion
+  $montoDevolucion = 0; //con esto verificaremos si se puede realizar la devolución
+  
+  $stmtVerificarValor = $enlace->prepare("SELECT precio FROM producto WHERE clave_producto = ?");
+  $stmtVerificarValor->bind_param("i", $id);
+  
+  foreach($_SESSION["devolucion"] as $id=>$info){
+    $stmtVerificarValor->execute();
+    $resultadoValor = $stmtVerificarValor->get_result();
+    $tuplaResultadoValor = $resultadoValor->fetch_assoc();
+    $montoDevolucion += ($_SESSION["devolucion"][$id]["cantidad"] * $tuplaResultadoValor["precio"]);
+  }
+  
+  if($montoDevolucion > $_SESSION["dinero_caja"]){
+    header("Location: ../../Pantallas/Vendedor.php");
+    exit();
+  }
+  else{
+    header("Location: Gerente_Autorizar.php");
+    exit();
+  }
 }
 ?>

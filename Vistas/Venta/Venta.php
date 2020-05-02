@@ -30,6 +30,15 @@
       $folio += 1;
     }
     
+    $stmtInfoEmpleado = $enlace->prepare("SELECT nombre_empleado FROM empleado WHERE rfc_empleado = ?");
+    $stmtInfoEmpleado->bind_param("s" ,$_SESSION["empleado"]);
+    $stmtInfoEmpleado->execute();
+
+    $infoEmpleado = $stmtInfoEmpleado->get_result();
+    
+    $tuplaInfoEmpleado= $infoEmpleado->fetch_assoc();
+    $nomEmpleado = $tuplaInfoEmpleado["nombre_empleado"];
+    
     $stmtInfoCliente = $enlace->prepare("SELECT nombre, domicilio FROM cliente WHERE rfc = ?");
     $stmtInfoCliente->bind_param("s" ,$_SESSION["cliente"]);
     $stmtInfoCliente->execute();
@@ -115,7 +124,9 @@
         exit();
     }
 ?>
-
+  
+<p>Le atiende: <strong><?=$nomEmpleado?></strong></p>
+  
 <p>Folio de la venta actual: <?=$folio?></p>
 <p>Fecha actual: <?=date("Y-m-d")?></p>
 <p>RFC de Cliente: <?=$_SESSION["cliente"]?></p>
