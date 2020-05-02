@@ -36,6 +36,7 @@ $stmtFolioMax->close();
     <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css" integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
   </head>
   <body>
+    <a href="../../Pantallas/Vendedor.php">Regresar</a>
     <h1>Consulta de Ventas</h1>
     <p>En este sitio podrás consultar las ventas que se encuentren registradas en el sistema</p>
     <form method="post" class="pure-form">
@@ -47,7 +48,9 @@ $stmtFolioMax->close();
   
 <?php
 if(isset($_POST["buscar"])){
-  $stmtVenta = $enlace->prepare("SELECT fecha_venta, rfc_empleado, id_cliente, iva FROM venta WHERE folio_venta = ?");
+  $subtotal = 0;
+  
+  $stmtVenta = $enlace->prepare("SELECT fecha_venta, rfc_empleado, id_cliente, iva, metodo_pago FROM venta WHERE folio_venta = ?");
   $stmtVenta->bind_param("i", $_POST["folio"]);
   $stmtVenta->execute();
   $resultadoVenta = $stmtVenta->get_result();
@@ -70,6 +73,7 @@ if(isset($_POST["buscar"])){
         <th>RFC Empleado</th>
         <th>RFC Cliente</th>
         <th>IVA</th>
+        <th>Método de Pago</th>
       </tr>
     </thead>
     <tbody>
@@ -79,6 +83,7 @@ if(isset($_POST["buscar"])){
         <td><?=$tuplaVenta["rfc_empleado"]?></td>
         <td><?=$tuplaVenta["id_cliente"]?></td>
         <td><?=$tuplaVenta["iva"]?></td>
+        <td><?=$tuplaVenta["metodo_pago"]?></td>
       </tr>
     </tbody>
   </table>
@@ -100,6 +105,8 @@ if(isset($_POST["buscar"])){
         $stmtInfoProducto->execute();
         $resultadoInfoProducto = $stmtInfoProducto->get_result();
         $tuplaInfoProducto = $resultadoInfoProducto->fetch_assoc();
+    
+        $subtotal += ($tupla["cantidad"] * $tupla["valor_unitario"]);
       ?>
       <tr>
         <td><?=$tupla["clave_producto"]?></td>
@@ -109,6 +116,22 @@ if(isset($_POST["buscar"])){
         <td><?=$tupla["valor_unitario"]?></td>
       </tr>
       <?php }?>
+    </tbody>
+  </table>
+  
+  <table class="pure-table">
+    <thead>
+      <br><legend>Información de Pago</legend><br>
+      <tr>
+        <th>Subtotal de la Venta</th>
+        <th>Total de la Venta</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><?=$subtotal?></td>
+        <td><?=$subtotal + ($subtotal * $tuplaVenta["iva"])?></td>
+      </tr>
     </tbody>
   </table>
 <?php

@@ -55,7 +55,14 @@
     <p>Aquí se muestra el IVA</p>
     <p>Aquí se muestra el total + IVA</p>
 </div>
-    
+
+<?php
+  if(isset($_POST["cancelar"])){
+    header("Location: ../../Pantallas/Vendedor.php");
+    exit();
+  }
+?>
+
 <?php
     if(isset($_POST['confirmar'])){ 
         $_SESSION["folio_venta"] = $folio;
@@ -135,6 +142,7 @@
     <label for="metodoCredito">Crédito</label>
     <input id="metodoCredito" name="metodo" type="radio" value="credito"><br>
     <input type="submit" class="pure-button" name="confirmar" value="Confirmar">
+    <input type="submit" class="pure-button" name="cancelar" value="Cancelar">
 </form>
     
 </body>
