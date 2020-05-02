@@ -41,6 +41,8 @@ echo "La fecha actual es: " . date("d-m-Y") . "<br><br>";
         <legend>Productos Comprados</legend><br>
         <tr>
             <th>ID</th>
+            <th>Nombre</th>
+            <th>Descripción</th>
             <th>Cantidad</th>
             <th>Precio Unitario</th>
         </tr>
@@ -52,6 +54,8 @@ echo "La fecha actual es: " . date("d-m-Y") . "<br><br>";
         ?>
         <tr>
             <td><?=$id?></td>
+            <td><?=$_SESSION["orden"][$id]["nombre"]?></td>
+            <td><?=$_SESSION["orden"][$id]["descripcion"]?></td>
             <td><?=$_SESSION["orden"][$id]["cantidad"]?></td>
             <td><?=$_SESSION["orden"][$id]["precio"]?></td>
         </tr>

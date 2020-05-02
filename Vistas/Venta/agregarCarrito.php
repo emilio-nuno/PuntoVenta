@@ -42,12 +42,16 @@
         else{
             $_SESSION["orden"][$idProducto]["cantidad"] = $cantidadProducto; 
             $_SESSION["orden"][$idProducto]["precio"] = $row["precio"];
+            $_SESSION["orden"][$idProducto]["nombre"] = $row["nombre"];
+            $_SESSION["orden"][$idProducto]["descripcion"] = $row["descripcion"];
         }
     }
     else{
         if($cantidadProducto != 0){
             $_SESSION["orden"][$idProducto]["cantidad"] = $cantidadProducto;
             $_SESSION["orden"][$idProducto]["precio"] = $row["precio"];
+            $_SESSION["orden"][$idProducto]["nombre"] = $row["nombre"];
+            $_SESSION["orden"][$idProducto]["descripcion"] = $row["descripcion"];
         }
         else{
             echo "No se pueden agregar 0 productos del id " . $idProducto . " al carrito"; 
@@ -60,6 +64,8 @@
         <legend>Carrito de Compras</legend>
         <tr>
             <th>ID</th>
+            <th>Nombre</th>
+            <th>Descripción</th>
             <th>Cantidad</th>
             <th>Precio Unitario</th>
         </tr>
@@ -71,6 +77,8 @@
         ?>
         <tr>
             <td><?=$id?></td>
+            <td><?=$_SESSION["orden"][$id]["nombre"]?></td>
+            <td><?=$_SESSION["orden"][$id]["descripcion"]?></td>
             <td><?=$_SESSION["orden"][$id]["cantidad"]?></td>
             <td><?=$_SESSION["orden"][$id]["precio"]?></td>
         </tr>
