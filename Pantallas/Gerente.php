@@ -1,3 +1,7 @@
+<?php
+/*TODO: Agregar validacion para corte de caja SOLO desde las 7 PM
+*/
+?>
 <!doctype html>
 
 <html lang="en">
