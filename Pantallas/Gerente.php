@@ -1,6 +1,25 @@
 <?php
 /*TODO: Agregar validacion para corte de caja SOLO desde las 7 PM
 */
+$horaCorteDisponible = 19;
+$horaInicioJornada = 11;
+
+function enRango($inicio, $fin){
+  $horaActual = date("H");
+  //$horaActual = 19;
+  if($inicio > $fin){
+    if($horaActual >= $inicio || $horaActual < $fin){
+      return true;
+    }
+  }
+  
+  else if($horaActual >= $inicio && $horaActual <= $fin){
+      return true;
+  }
+  
+  return false;
+}
+
 ?>
 <!doctype html>
 
@@ -19,7 +38,11 @@
                 <i class="fa fa-caret-down"></i>
             </button>
             <div class="dropdown-content">
+              <?php if(enRango($horaCorteDisponible, $horaInicioJornada)){?>
               <a href="../Vistas/Corte/Generar_Corte.php">Generar Corte de Caja</a>
+             <?php }else{ ?>
+              <a>Generar Corte de Caja</a>
+            <?php } ?>
             </div>
         </div>
         <div class="dropdown">

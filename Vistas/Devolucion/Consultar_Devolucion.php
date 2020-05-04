@@ -35,6 +35,7 @@ else{
     <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css" integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
   </head>
   <body>
+    <a href="../../Pantallas/Vendedor.php">Regresar</a>
     <h1>Consulta de Devoluciones</h1>
     <p>En este sitio podrás consultar las devoluciones registradas</p>
     <form method="post" class="pure-form">

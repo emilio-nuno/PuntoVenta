@@ -56,6 +56,9 @@ if(isset($_POST["buscar"])){
   $stmtDetalleAjuste->bind_param("i", $_POST["folio"]);
   $stmtDetalleAjuste->execute();
   $resultadoDetalle = $stmtDetalleAjuste->get_result();
+  
+  $stmtInfoProducto = $enlace->prepare("SELECT nombre, descripcion FROM producto WHERE clave_producto = ?");
+  $stmtInfoProducto->bind_param("i", $clave_producto);
 ?>
   <table class="pure-table">
     <thead>
@@ -80,14 +83,22 @@ if(isset($_POST["buscar"])){
         <br><legend>Desglose de Productos retirados en el folio <?=$_POST["folio"]?></legend><br>
         <tr>
           <th>Clave de Producto</th>
+          <th>Nombre</th>
+          <th>Descripción</th>
           <th>Cantidad</th>
           <th>Motivo</th>
         </tr>
       </thead>
       <tbody>
-        <?php while($tuplaDetalle = $resultadoDetalle->fetch_assoc()){?>
+        <?php while($tuplaDetalle = $resultadoDetalle->fetch_assoc()){
+        $clave_producto = $tuplaDetalle["clave_producto"];
+        $stmtInfoProducto->execute();
+        $tuplaInfoProducto = $stmtInfoProducto->get_result()->fetch_assoc();
+        ?>
         <tr>
           <td><?=$tuplaDetalle["clave_producto"]?></td>
+          <td><?=$tuplaInfoProducto["nombre"]?></td>
+          <td><?=$tuplaInfoProducto["descripcion"]?></td>
           <td><?=$tuplaDetalle["cantidad"]?></td>
           <td><?=$tuplaDetalle["motivo"]?></td>
           

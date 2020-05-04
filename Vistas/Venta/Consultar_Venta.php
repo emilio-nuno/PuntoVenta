@@ -1,7 +1,4 @@
 <?php
-/*TODO:
-*Agregar funcionalidad pare regresar a a menú principal
-*/
 $servidor="localhost";
 $usuario="root";
 $clave="";
@@ -63,6 +60,17 @@ if(isset($_POST["buscar"])){
   
   $stmtInfoProducto = $enlace->prepare("SELECT nombre, descripcion FROM producto WHERE clave_producto = ?");
   $stmtInfoProducto->bind_param("i", $productoClave);
+  
+  $stmtNombreEmpleado = $enlace->prepare("SELECT nombre_empleado FROM empleado WHERE rfc_empleado = ?");
+  $stmtNombreEmpleado->bind_param("s", $tuplaVenta["rfc_empleado"]);
+  $stmtNombreEmpleado->execute();
+  $tuplaNombreEmpleado = $stmtNombreEmpleado->get_result()->fetch_assoc();
+  
+  $stmtNombreCliente = $enlace->prepare("SELECT nombre FROM cliente WHERE rfc = ?");
+  $stmtNombreCliente->bind_param("s", $tuplaVenta["id_cliente"]);
+  $stmtNombreCliente->execute();
+  $tuplaNombreCliente = $stmtNombreCliente->get_result()->fetch_assoc();
+  
 ?>
   <table class="pure-table">
     <thead>
@@ -71,7 +79,9 @@ if(isset($_POST["buscar"])){
         <th>Folio de Venta</th>
         <th>Fecha</th>
         <th>RFC Empleado</th>
+        <th>Nombre Empleado</th>
         <th>RFC Cliente</th>
+        <th>Nombre Cliente</th>
         <th>IVA</th>
         <th>Método de Pago</th>
       </tr>
@@ -81,7 +91,9 @@ if(isset($_POST["buscar"])){
         <td><?=$_POST["folio"]?></td>
         <td><?=$tuplaVenta["fecha_venta"]?></td>
         <td><?=$tuplaVenta["rfc_empleado"]?></td>
+        <td><?=$tuplaNombreEmpleado["nombre_empleado"]?></td>
         <td><?=$tuplaVenta["id_cliente"]?></td>
+        <td><?=$tuplaNombreCliente["nombre"]?></td>
         <td><?=$tuplaVenta["iva"]?></td>
         <td><?=$tuplaVenta["metodo_pago"]?></td>
       </tr>

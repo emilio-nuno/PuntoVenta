@@ -44,6 +44,11 @@ if(isset($_POST["buscar"])){
   $stmtBuscar->bind_param("i", $_POST["folio"]);
   $stmtBuscar->execute();
   $tuplaFlujo = $stmtBuscar->get_result()->fetch_assoc();
+  
+  $stmtNombreEmpleado = $enlace->prepare("SELECT nombre_empleado FROM empleado WHERE rfc_empleado = ?");
+  $stmtNombreEmpleado->bind_param("s", $tuplaFlujo["id_empleado"]);
+  $stmtNombreEmpleado->execute();
+  $tuplaNombreEmpleado = $stmtNombreEmpleado->get_result()->fetch_assoc();
   ?>
   <table class="pure-table">
     <thead>
@@ -53,6 +58,7 @@ if(isset($_POST["buscar"])){
         <th>Fecha</th>
         <th>Hora</th>
         <th>RFC Empleado</th>
+        <th>Nombre Empleado</th>
         <th>Monto</th>
       </tr>
     </thead>
@@ -62,6 +68,7 @@ if(isset($_POST["buscar"])){
         <td><?=$tuplaFlujo["fecha"]?></td>
         <td><?=$tuplaFlujo["hora"]?></td>
         <td><?=$tuplaFlujo["id_empleado"]?></td>
+        <td><?=$tuplaNombreEmpleado["nombre_empleado"]?></td>
         <td><?=$tuplaFlujo["monto"]?></td>
       </tr>
     </tbody>
