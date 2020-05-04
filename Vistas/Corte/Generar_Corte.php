@@ -21,7 +21,7 @@ $stmtConseguirInfoVentas->execute();
 $stmtConsultarTotalVenta = $enlace->prepare("SELECT folio_venta, SUM(total) as monto_venta FROM desglose_dia WHERE folio_venta = ?");
 $stmtConsultarTotalVenta->bind_param("i", $folioVenta);
 
-$stmtConseguirFoliosDia = $enlace->prepare("SELECT folio_venta FROM venta WHERE DATEDIFF(fecha_venta, ?) = 0"); //generamos los folios del día, para iterar sobre ellos
+$stmtConseguirFoliosDia = $enlace->prepare("SELECT folio_venta, metodo_pago FROM venta WHERE DATEDIFF(fecha_venta, ?) = 0"); //generamos los folios del día, para iterar sobre ellos
 $stmtConseguirFoliosDia->bind_param("s", $fecha);
 $stmtConseguirFoliosDia->execute();
 
@@ -30,7 +30,8 @@ $resultadoFolios = $stmtConseguirFoliosDia->get_result();
 $stmtConseguirInfoVentas->close();
 $stmtConseguirFoliosDia->close();
 
-$totalVentas = 0;
+$totalVentasEfectivo = 0;
+$totalVentasCredito = 0;
 $totalDevoluciones = 0;
 $totalFlujos = 0;
 ?>
@@ -63,22 +64,27 @@ $totalFlujos = 0;
               $stmtConsultarTotalVenta->execute();
               $resultadoTotal = $stmtConsultarTotalVenta->get_result();
               $tuplaVenta = $resultadoTotal->fetch_assoc();
-              $totalVentas += $tuplaVenta["monto_venta"];
+              if($tuplaFolio["metodo_pago"] == "efectivo"){
+                $totalVentasEfectivo += $tuplaVenta["monto_venta"]; 
+              }
+              else{
+                $totalVentasCredito += $tuplaVenta["monto_venta"]; 
+              }
       ?>
       <tr>
         <td><?=$tuplaVenta["folio_venta"]?></td>
         <td><?=$tuplaVenta["monto_venta"]?></td>
-        <td>Efectivo</td>
+        <td><?=ucfirst($tuplaFolio["metodo_pago"])?></td>
       </tr>
       <?php } ?>
     </tbody>
   
     <tfoot>
-      <th>Total</th>
-      <td><?=$totalVentas?></td>
+      <th>Total de Ventas en efectivo</th>
+      <td><?=$totalVentasEfectivo?></td>
     </tfoot>
 </table>
-
+  
 <?php
 $stmtConsultarTotalVenta->close();
 
@@ -167,8 +173,8 @@ $stmtConseguirFlujos->close();
     </tfoot>
 </table>
 
-<p><strong>TOTAL VOUCHERS: <?=$totalVentas - $totalDevoluciones?></strong></p>
-<p><strong>TOTAL EFECTIVO: <?=$totalVentas - $totalDevoluciones - $totalFlujos?></strong></p>
+<p><strong>TOTAL VOUCHERS: <?=$totalVentasCredito?></strong></p>
+<p><strong>TOTAL EFECTIVO: <?=$totalVentasEfectivo - $totalDevoluciones - $totalFlujos?></strong></p>
   
 <?php
   $rfc_emp = "1234567890121"; //cambiar estos a valores dados por $_SESSION[]
