@@ -15,17 +15,17 @@ if(mysqli_connect_errno()){
 //Sacamos el último folio registrado y hacemos que el valor máximo del input sea el último folio
 //Si no existe ningún registro se redirecciona a otro sitio
 
-$stmtFolioVentaMax = $enlace->prepare("SELECT folio_venta FROM venta ORDER BY folio_venta DESC LIMIT 1"); //Verificamos el valor máximo de un folio
-$stmtFolioVentaMax->execute();
-$resultado = $stmtFolioVentaMax->get_result();
+$stmtFolioDevolucionMax = $enlace->prepare("SELECT folio_devolucion FROM devolucion ORDER BY folio_devolucion DESC LIMIT 1"); //Verificamos el valor máximo de un folio de devolución
+$stmtFolioDevolucionMax->execute();
+$resultado = $stmtFolioDevolucionMax->get_result();
 if($resultado->num_rows == 0){
   echo "No puede consultar porque no hay ninguna devolución registrada... Intente después";
-  header("Location: Inicio_Devolucion.php"); //Probablemente iremos a algún menú que tendremos luego
+  header("Location: ../../Pantallas/Vendedor.php"); 
   exit();
 }
 else{
   $tupla = $resultado->fetch_assoc();
-  $max = $tupla["folio_venta"];
+  $max = $tupla["folio_devolucion"];
 }
 ?>
 
@@ -35,8 +35,9 @@ else{
     <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css" integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
   </head>
   <body>
+    <a href="../../Pantallas/Vendedor.php">Regresar</a>
     <h1>Consulta de Devoluciones</h1>
-    <p>En este sitio podrás consultar las devoluciones asociadas a una venta</p>
+    <p>En este sitio podrás consultar las devoluciones registradas</p>
     <form method="post" class="pure-form">
       <input type="number" step="1" min="1" max=<?=$max?> placeholder="Folio" name="folio" required>
       <input type="submit" value="Buscar" name="buscar">
@@ -46,67 +47,92 @@ else{
   
 <?php
 if(isset($_POST["buscar"])){
-  $stmtInfoDevolucion = $enlace->prepare("SELECT folio_devolucion, fecha, rfc_empleado FROM devolucion WHERE folio_venta = ?");
+  $stmtInfoDevolucion = $enlace->prepare("SELECT * FROM devolucion WHERE folio_devolucion = ?");
   $stmtInfoDevolucion->bind_param("i", $_POST["folio"]);
   $stmtInfoDevolucion->execute();
   $resultadoInfoDevolucion = $stmtInfoDevolucion->get_result();
+  $tuplaInfoDevolucion = $resultadoInfoDevolucion->fetch_assoc();
   
-  $stmtDetalleDevolucion = $enlace->prepare("SELECT folio_devolucion, clave_producto, cantidad, motivo FROM detalle_devolucion WHERE folio_devolucion IN(SELECT folio_devolucion FROM devolucion WHERE folio_venta = ?)"); //regresa un desglose de todos los productos retornados en asociación con una venta
+  $stmtDetalleDevolucion = $enlace->prepare("SELECT * FROM detalle_devolucion WHERE folio_devolucion = ?"); //regresa un desglose de todos los productos retornados en asociación con una venta
   $stmtDetalleDevolucion->bind_param("i", $_POST["folio"]);
   $stmtDetalleDevolucion->execute();
   $resultadoDetalle = $stmtDetalleDevolucion->get_result();
   
-  $stmtContadorDevoluciones = $enlace->prepare("SELECT folio_devolucion, COUNT(*) as num_productos FROM detalle_devolucion WHERE folio_devolucion IN(SELECT folio_devolucion FROM devolucion WHERE folio_venta = ?) GROUP BY folio_devolucion"); //retorna folio de dev y num productos asociados a ese folio
-  $stmtContadorDevoluciones->bind_param("i", $_POST["folio"]);
-  $stmtContadorDevoluciones->execute();
-  $resultadoDevoluciones = $stmtContadorDevoluciones->get_result();
+  $stmtInfoVenta = $enlace->prepare("SELECT fecha_venta FROM venta WHERE folio_venta = ?");
+  $stmtInfoVenta->bind_param("i", $folio_venta);
+  
+  $stmtInfoEmpleado = $enlace->prepare("SELECT nombre_empleado FROM empleado WHERE rfc_empleado = ?");
+  $stmtInfoEmpleado->bind_param("s", $rfc_emp);
+  
+  $stmtInfoProducto = $enlace->prepare("SELECT nombre, descripcion FROM producto WHERE clave_producto = ?");
+  $stmtInfoProducto->bind_param("i", $clav_prod);
 ?>
   <table class="pure-table">
     <thead>
-      <legend>Tabla de Devoluciones asociadas a la Venta <?=$_POST["folio"]?></legend><br>
+      <legend>Tabla de Información de la Devolución <?=$_POST["folio"]?></legend><br>
       <tr>
         <th>Folio de Devolución</th>
-        <th>Fecha</th>
+        <th>Fecha de la Devolución</th>
+        <th>Folio de Venta asociada</th>
+        <th>Fecha de la Venta</th>
         <th>RFC Empleado</th>
+        <th>Nombre del Empleado</th>
       </tr>
     </thead>
     <tbody>
-      <?php while($tuplaInfoDevolucion = $resultadoInfoDevolucion->fetch_assoc()){?>
+      <?php 
+        $folio_venta = $tuplaInfoDevolucion["folio_venta"];
+        $rfc_emp = $tuplaInfoDevolucion["rfc_empleado"];
+  
+        $stmtInfoVenta->execute();
+  
+        $resultadoFecha = $stmtInfoVenta->get_result();
+        $tuplaFechaVenta = $resultadoFecha->fetch_assoc();
+  
+        $stmtInfoEmpleado->execute();
+  
+        $resultadoEmpleado = $stmtInfoEmpleado->get_result();
+        $tuplaInfoEmpleado = $resultadoEmpleado->fetch_assoc();
+      ?>
       <tr>
-          <td><?=$tuplaInfoDevolucion["folio_devolucion"]?></td>
-          <td><?=$tuplaInfoDevolucion["fecha"]?></td>
-          <td><?=$tuplaInfoDevolucion["rfc_empleado"]?></td>
+        <td><?=$_POST["folio"]?></td>
+        <td><?=$tuplaInfoDevolucion["fecha"]?></td>
+        <td><?=$tuplaInfoDevolucion["folio_venta"]?></td>
+        <td><?=$tuplaFechaVenta["fecha_venta"]?></td>
+        <td><?=$tuplaInfoDevolucion["rfc_empleado"]?></td>
+        <td><?=$tuplaInfoEmpleado["nombre_empleado"]?></td>
       </tr>
-      <?php }?>
     </tbody>
   </table>
   
-  <?php while($tuplaVeces = $resultadoDevoluciones->fetch_assoc()){
-    $numVeces = $tuplaVeces["num_productos"];?>
-  
-    <table class="pure-table">
-      <thead>
-        <br><legend>Desglose de Productos devueltos en el folio <?=$tuplaVeces["folio_devolucion"]?></legend><br>
-        <tr>
-          <th>Clave de Producto</th>
-          <th>Cantidad</th>
-          <th>Motivo</th>
-        </tr>
-      </thead>
-      <tbody>
-    <?php
-    for($i = 0; $i < $numVeces; $i++){
-      $tuplaDetalle = $resultadoDetalle->fetch_assoc();
-    ?>
-        <tr>
-          <td><?=$tuplaDetalle["clave_producto"]?></td>
-          <td><?=$tuplaDetalle["cantidad"]?></td>
-          <td><?=$tuplaDetalle["motivo"]?></td>
-          
-        </tr>
-      </tbody>
-  <?php
-    }
-  }
+  <table class="pure-table">
+    <thead>
+      <br><legend>Desglose de productos devueltos en folio: <?=$_POST["folio"]?></legend><br>
+      <tr>
+        <th>Clave del Producto</th>
+        <th>Nombre del Producto</th>
+        <th>Descripción del Producto</th>
+        <th>Cantidad</th>
+        <th>Motivo</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php while($tuplaInfoDetalle = $resultadoDetalle->fetch_assoc()){
+      $clav_prod = $tuplaInfoDetalle["clave_producto"];
+      $stmtInfoProducto->execute();
+      $resultadoInfoProducto = $stmtInfoProducto->get_result();
+      $tuplaInfoProducto = $resultadoInfoProducto->fetch_assoc();
+      ?>
+      <tr>
+        <td><?=$clav_prod?></td>
+        <td><?=$tuplaInfoProducto["nombre"]?></td>
+        <td><?=$tuplaInfoProducto["descripcion"]?></td>
+        <td><?=$tuplaInfoDetalle["cantidad"]?></td>
+        <td><?=$tuplaInfoDetalle["motivo"]?></td>
+      </tr>
+      <?php } ?>
+    </tbody>
+  </table>
+<?php
 }
 ?>

@@ -1,7 +1,4 @@
 <?php
-/*TODO:
-*Agregar funcionalidad pare regresar a a menú principal
-*/
 $servidor="localhost";
 $usuario="root";
 $clave="";
@@ -20,7 +17,7 @@ $stmtFolioMax->execute();
 $resultado = $stmtFolioMax->get_result();
 if($resultado->num_rows == 0){
   echo "No puede consultar porque no hay ninguna venta registrada... Intente después";
-  header("Location: Verificar_Cliente.php"); //Probablemente iremos a algún menú que tendremos luego
+  header("Location: ../../Pantallas/Vendedor.php"); //Probablemente iremos a algún menú que tendremos luego
   exit();
 }
 else{
@@ -36,6 +33,7 @@ $stmtFolioMax->close();
     <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css" integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
   </head>
   <body>
+    <a href="../../Pantallas/Vendedor.php">Regresar</a>
     <h1>Consulta de Ventas</h1>
     <p>En este sitio podrás consultar las ventas que se encuentren registradas en el sistema</p>
     <form method="post" class="pure-form">
@@ -47,7 +45,9 @@ $stmtFolioMax->close();
   
 <?php
 if(isset($_POST["buscar"])){
-  $stmtVenta = $enlace->prepare("SELECT fecha_venta, rfc_empleado, id_cliente, iva FROM venta WHERE folio_venta = ?");
+  $subtotal = 0;
+  
+  $stmtVenta = $enlace->prepare("SELECT fecha_venta, rfc_empleado, id_cliente, iva, metodo_pago FROM venta WHERE folio_venta = ?");
   $stmtVenta->bind_param("i", $_POST["folio"]);
   $stmtVenta->execute();
   $resultadoVenta = $stmtVenta->get_result();
@@ -57,6 +57,20 @@ if(isset($_POST["buscar"])){
   $stmtDetalleVenta->bind_param("i", $_POST["folio"]);
   $stmtDetalleVenta->execute();
   $resultadoDetalle = $stmtDetalleVenta->get_result();
+  
+  $stmtInfoProducto = $enlace->prepare("SELECT nombre, descripcion FROM producto WHERE clave_producto = ?");
+  $stmtInfoProducto->bind_param("i", $productoClave);
+  
+  $stmtNombreEmpleado = $enlace->prepare("SELECT nombre_empleado FROM empleado WHERE rfc_empleado = ?");
+  $stmtNombreEmpleado->bind_param("s", $tuplaVenta["rfc_empleado"]);
+  $stmtNombreEmpleado->execute();
+  $tuplaNombreEmpleado = $stmtNombreEmpleado->get_result()->fetch_assoc();
+  
+  $stmtNombreCliente = $enlace->prepare("SELECT nombre FROM cliente WHERE rfc = ?");
+  $stmtNombreCliente->bind_param("s", $tuplaVenta["id_cliente"]);
+  $stmtNombreCliente->execute();
+  $tuplaNombreCliente = $stmtNombreCliente->get_result()->fetch_assoc();
+  
 ?>
   <table class="pure-table">
     <thead>
@@ -65,8 +79,11 @@ if(isset($_POST["buscar"])){
         <th>Folio de Venta</th>
         <th>Fecha</th>
         <th>RFC Empleado</th>
+        <th>Nombre Empleado</th>
         <th>RFC Cliente</th>
+        <th>Nombre Cliente</th>
         <th>IVA</th>
+        <th>Método de Pago</th>
       </tr>
     </thead>
     <tbody>
@@ -74,8 +91,11 @@ if(isset($_POST["buscar"])){
         <td><?=$_POST["folio"]?></td>
         <td><?=$tuplaVenta["fecha_venta"]?></td>
         <td><?=$tuplaVenta["rfc_empleado"]?></td>
+        <td><?=$tuplaNombreEmpleado["nombre_empleado"]?></td>
         <td><?=$tuplaVenta["id_cliente"]?></td>
+        <td><?=$tuplaNombreCliente["nombre"]?></td>
         <td><?=$tuplaVenta["iva"]?></td>
+        <td><?=$tuplaVenta["metodo_pago"]?></td>
       </tr>
     </tbody>
   </table>
@@ -85,18 +105,45 @@ if(isset($_POST["buscar"])){
       <br><legend>Tabla de Productos</legend><br>
       <tr>
         <th>Clave de Producto</th>
+        <th>Nombre</th>
+        <th>Descripción</th>
         <th>Cantidad</th>
         <th>Valor Unitario</th>
       </tr>
     </thead>
     <tbody>
-      <?php while($tupla = $resultadoDetalle->fetch_assoc()){?>
+      <?php while($tupla = $resultadoDetalle->fetch_assoc()){
+        $productoClave = $tupla["clave_producto"];
+        $stmtInfoProducto->execute();
+        $resultadoInfoProducto = $stmtInfoProducto->get_result();
+        $tuplaInfoProducto = $resultadoInfoProducto->fetch_assoc();
+    
+        $subtotal += ($tupla["cantidad"] * $tupla["valor_unitario"]);
+      ?>
       <tr>
         <td><?=$tupla["clave_producto"]?></td>
+        <td><?=$tuplaInfoProducto["nombre"]?></td>
+        <td><?=$tuplaInfoProducto["descripcion"]?></td>
         <td><?=$tupla["cantidad"]?></td>
         <td><?=$tupla["valor_unitario"]?></td>
       </tr>
       <?php }?>
+    </tbody>
+  </table>
+  
+  <table class="pure-table">
+    <thead>
+      <br><legend>Información de Pago</legend><br>
+      <tr>
+        <th>Subtotal de la Venta</th>
+        <th>Total de la Venta</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><?=$subtotal?></td>
+        <td><?=$subtotal + ($subtotal * $tuplaVenta["iva"])?></td>
+      </tr>
     </tbody>
   </table>
 <?php

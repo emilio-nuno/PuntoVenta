@@ -48,7 +48,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     $rfc = trim($_POST["rfc"]); //hacer que este sea el éxito
                     $_SESSION["cliente"]= $rfc;
                     header("Location: Venta.php");
-                    exit;
+                    exit();
                 } else{
                     echo "El RFC ingresado no se encuentra registrado.";
                 }

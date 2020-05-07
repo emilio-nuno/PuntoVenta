@@ -45,7 +45,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 if($resultado->num_rows == 1 && $row["cargo"] == "Supervisor"){
                     
                     header("Location: Registro_Devolucion.php");
-                    exit;
+                    exit();
                 } else{
                     echo "El RFC ingresado no se encuentra registrado o el empleado no es Supervisor.";
                 }

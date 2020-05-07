@@ -1,9 +1,9 @@
 <?php
- session_start(); //este programa generará las variables $_SESSION["cargo"] = 1 si Supervisor y 0 si no y $_SESSION["empleado"] = rfc
-
+ session_start();
 /*TODO:
-*Eliminar esta vista porque cuando integremos los archivos, el Login_Empleado será suficiente
+*Agregar campos descriptivos para devolucion
 */
+$_SESSION["dinero_caja"] = 2000; //Inicializamos la caja con una valor de 2000
 
 //Inicializar variables para conexión a BD
 $servidor="localhost";
@@ -48,11 +48,22 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 $row = $resultado->fetch_assoc();
                 
                 if($resultado->num_rows == 1){
-                    $rfc = trim($_POST["rfc"]); //hacer que este sea el éxito
+                    $rfc = trim($_POST["rfc"]);
                     $_SESSION["empleado"]= $rfc;
-                    //hay dos valores, empleado y supervisor
-                    header("Location: Inicio_Devolucion.php");
-                    exit;
+                  
+                    $nivel = $row["cargo"];
+                    if($nivel == "Empleado"){
+                      header("Location: Pantallas/Vendedor.php");
+                      exit();
+                    }
+                    else if($nivel == "Supervisor"){
+                      header("Location: Pantallas/Gerente.php");
+                      exit();
+                    }
+                    else if($nivel == "Almacenista"){
+                      header("Location: Pantallas/Almacenista.php");
+                      exit();
+                    }
                 } else{
                     echo "El RFC ingresado no se encuentra registrado.";
                 }

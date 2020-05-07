@@ -25,8 +25,28 @@ $meses = floor(($dif - $anos * 365*60*60*24) / (30*60*60*24));
 
 if($meses > 0){
     header("Location: Inicio_Devolucion.php");
-    exit;
+    exit();
 }
+
+$stmtFolioActualPrincipio = $enlace->prepare("SELECT folio_devolucion FROM devolucion ORDER BY folio_devolucion DESC LIMIT 1"); //hacer lo mismo en venta
+$stmtFolioActualPrincipio->execute();
+$result = $stmtFolioActualPrincipio->get_result();
+if($result->num_rows == 0){
+  $folio = 1;
+}
+else{
+  $row = $result->fetch_assoc();
+  $folio = $row["folio_devolucion"] + 1;
+}
+
+$stmtInfoEmpleado = $enlace->prepare("SELECT nombre_empleado FROM empleado WHERE rfc_empleado = ?");
+$stmtInfoEmpleado->bind_param("s" ,$_SESSION["empleado"]);
+$stmtInfoEmpleado->execute();
+
+$infoEmpleado = $stmtInfoEmpleado->get_result();
+    
+$tuplaInfoEmpleado= $infoEmpleado->fetch_assoc();
+$nomEmpleado = $tuplaInfoEmpleado["nombre_empleado"];
 ?>
 
 <!DOCTYPE html>
@@ -37,6 +57,12 @@ if($meses > 0){
 </head>
 
 <body>
+  <p>Le atiende: <strong><?=$nomEmpleado?></strong></p>
+  
+  <p>Folio de la devolución actual: <?=$folio?></p>
+  <p>Fecha actual: <?=date("Y-m-d")?></p>
+  <p>Venta asociada a esta Devolución: <?=$_SESSION["folio_venta"]?></p>
+  
   <p>Vendedor, por favor <span style="color:red;">verifique</span> los productos entregados por el cliente antes de llenar el formulario para cada producto</p>
   <form class="pure-form" method="post">
     <fieldset>
@@ -101,14 +127,22 @@ if(isset($_POST["devolver"])){
       echo "Estás intentando regresar más productos de los que compraste";
     }
     else{
+      $consultarDatos = "SELECT * FROM producto where clave_producto = '$clave'";
+      $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
+      $row = mysqli_fetch_array($ejecutarConsultar);
+      
       $_SESSION["devolucion"][$clave]["cantidad"] = $_POST["cantidad"];
       $_SESSION["devolucion"][$clave]["motivo"] = $_POST["motivo"];
+      $_SESSION["devolucion"][$clave]["descripcion"] = $row["descripcion"];
+      $_SESSION["devolucion"][$clave]["nombre"] = $row["nombre"];
       ?>
       <table class="pure-table" id="productos">
         <thead>
           <legend>Productos Aceptados para Devolución</legend>
             <tr>
               <th>ID</th>
+              <th>Nombre</th>
+              <th>Descripción</th>
               <th>Cantidad</th>
               <th>Motivo</th>
           </tr>
@@ -120,6 +154,8 @@ if(isset($_POST["devolver"])){
           ?>
           <tr>
             <td><?=$id?></td>
+            <td><?=$_SESSION["devolucion"][$id]["nombre"]?></td>
+            <td><?=$_SESSION["devolucion"][$id]["descripcion"]?></td>
             <td><?=$_SESSION["devolucion"][$id]["cantidad"]?></td>
             <td><?=$_SESSION["devolucion"][$id]["motivo"]?></td>
           </tr>
@@ -136,8 +172,26 @@ if(isset($_POST["devolver"])){
 ?>
 
 <?php
-if(isset($_POST["confirmar"])){
-  header("Location: Gerente_Autorizar.php");
-  exit;
+if(isset($_POST["confirmar"])){ //aqui verificamos si se puede proceder con la devolucion
+  $montoDevolucion = 0; //con esto verificaremos si se puede realizar la devolución
+  
+  $stmtVerificarValor = $enlace->prepare("SELECT precio FROM producto WHERE clave_producto = ?");
+  $stmtVerificarValor->bind_param("i", $id);
+  
+  foreach($_SESSION["devolucion"] as $id=>$info){
+    $stmtVerificarValor->execute();
+    $resultadoValor = $stmtVerificarValor->get_result();
+    $tuplaResultadoValor = $resultadoValor->fetch_assoc();
+    $montoDevolucion += ($_SESSION["devolucion"][$id]["cantidad"] * $tuplaResultadoValor["precio"]);
+  }
+  
+  if($montoDevolucion > $_SESSION["dinero_caja"]){
+    header("Location: ../../Pantallas/Vendedor.php");
+    exit();
+  }
+  else{
+    header("Location: Gerente_Autorizar.php");
+    exit();
+  }
 }
 ?>

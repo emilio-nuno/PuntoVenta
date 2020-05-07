@@ -13,6 +13,10 @@ if(mysqli_connect_errno()){
 ?>
   
 <?php
+echo "Dinero en caja: " . $_SESSION["dinero_caja"];
+
+$cantidadCaja = $_SESSION["dinero_caja"]; //variable para validar destino de redireccion si es mayor a 10k entonces se va a flujo y si no al menu principal
+
 $folio_venta = $_SESSION["folio_venta"];
 $rfc_emp = $_SESSION["empleado"];
 $rfc_cli = $_SESSION["cliente"];
@@ -37,6 +41,8 @@ echo "La fecha actual es: " . date("d-m-Y") . "<br><br>";
         <legend>Productos Comprados</legend><br>
         <tr>
             <th>ID</th>
+            <th>Nombre</th>
+            <th>Descripción</th>
             <th>Cantidad</th>
             <th>Precio Unitario</th>
         </tr>
@@ -48,6 +54,8 @@ echo "La fecha actual es: " . date("d-m-Y") . "<br><br>";
         ?>
         <tr>
             <td><?=$id?></td>
+            <td><?=$_SESSION["orden"][$id]["nombre"]?></td>
+            <td><?=$_SESSION["orden"][$id]["descripcion"]?></td>
             <td><?=$_SESSION["orden"][$id]["cantidad"]?></td>
             <td><?=$_SESSION["orden"][$id]["precio"]?></td>
         </tr>
@@ -72,7 +80,13 @@ echo "La fecha actual es: " . date("d-m-Y") . "<br><br>";
   
 <?php
 if(isset($_POST["terminar"])){
-  header("Location: Verificar_Cliente.php");
-  exit();
+  if($cantidadCaja > 10000){
+    header("Location: ../Flujo/Gerente_Autorizar.php");
+    exit();
+  }
+  else{
+    header("Location: ../../Pantallas/Vendedor.php");
+    exit();
+  }
 }  
 ?>

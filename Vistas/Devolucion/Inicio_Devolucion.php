@@ -46,7 +46,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                     $_SESSION["folio_venta"]= $folio;
                     $_SESSION["fecha"] = $row["fecha_venta"];
                     header("Location: Devolucion.php");
-                    exit;
+                    exit();
                 } else{
                     echo "El folio de venta no existe en la base de datos.";
                 }

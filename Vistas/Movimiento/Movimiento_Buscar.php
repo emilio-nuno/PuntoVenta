@@ -1,4 +1,7 @@
 <?php
+/*TODO:
+*Agregar campo de nombre de empleado y desplegar información del folio generado (venta o devolución)
+*/
 $servidor="localhost";
 $usuario="root";
 $clave="";
@@ -29,6 +32,7 @@ else{
     <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css" integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
   </head>
   <body>
+    <a href="../../Pantallas/Almacenista.php">Regresar</a>
     <h1>Consulta de Movimientos</h1>
     <p>En este sitio podrás consultar los movimientos de almacén registrados</p>
     <form method="post" class="pure-form">
@@ -43,7 +47,17 @@ if(isset($_POST["buscar"])){
   $stmtBuscar = $enlace->prepare("SELECT * FROM movimiento_almacen WHERE folio_movimiento = ?");
   $stmtBuscar->bind_param("i", $_POST["folio"]);
   $stmtBuscar->execute();
-  $tuplaDevolucion = $stmtBuscar->get_result()->fetch_assoc();
+  $tuplaMovimiento = $stmtBuscar->get_result()->fetch_assoc();
+  
+  $rfc_emp = $tuplaMovimiento["id_empleado"];
+  
+  $stmtNombreEmpleado = $enlace->prepare("SELECT nombre_empleado FROM empleado WHERE rfc_empleado = ?");
+  $stmtNombreEmpleado->bind_param("s", $rfc_emp);
+  $stmtNombreEmpleado->execute();
+  $tuplaNombreEmpleado = $stmtNombreEmpleado->get_result()->fetch_assoc();
+  
+  $stmtNombreCliente = $enlace->prepare("SELECT nombre FROM cliente WHERE rfc = ?");
+  $stmtNombreCliente->bind_param("s", $rfc_cli);
   ?>
   <table class="pure-table">
     <thead>
@@ -53,22 +67,109 @@ if(isset($_POST["buscar"])){
         <th>Fecha</th>
         <th>Tipo</th>
         <th>RFC Empleado</th>
+        <th>Nombre Empleado</th>
         <th>Motivo</th>
-        <th>Folio Generado</th>
+        <th>Folio Generador</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><?=$_POST["folio"]?></td>
-        <td><?=$tuplaDevolucion["fecha"]?></td>
-        <td><?=$tuplaDevolucion["tipo"]?></td>
-        <td><?=$tuplaDevolucion["id_empleado"]?></td>
-        <td><?=$tuplaDevolucion["motivo"]?></td>
-        <td><?=$tuplaDevolucion["folio_generador"]?></td>
+        <td><?=$tuplaMovimiento["fecha"]?></td>
+        <td><?=$tuplaMovimiento["tipo"]?></td>
+        <td><?=$tuplaMovimiento["id_empleado"]?></td>
+        <td><?=$tuplaNombreEmpleado["nombre_empleado"]?></td>
+        <td><?=$tuplaMovimiento["motivo"]?></td>
+        <td><?=$tuplaMovimiento["folio_generador"]?></td>
       </tr>
     </tbody>
   </table>
-
+  <?php
+  if($tuplaMovimiento["motivo"] == "compra_cliente"){
+    $stmtVenta = $enlace->prepare("SELECT fecha_venta, rfc_empleado, id_cliente, iva, metodo_pago FROM venta WHERE folio_venta = ?");
+    $stmtVenta->bind_param("i", $tuplaMovimiento["folio_generador"]);
+    $stmtVenta->execute();
+    $resultadoVenta = $stmtVenta->get_result();
+    $tuplaVenta = $resultadoVenta->fetch_assoc();
+    
+    $rfc_emp = $tuplaVenta["rfc_empleado"];
+    $stmtNombreEmpleado->execute();
+    $tuplaNombreEmpleado = $stmtNombreEmpleado->get_result()->fetch_assoc();
+    
+    $rfc_cli = $tuplaVenta["id_cliente"];
+    $stmtNombreCliente->execute();
+    $tuplaNombreCliente = $stmtNombreCliente->get_result()->fetch_assoc();
+    ?>
+    <table class="pure-table">
+    <thead>
+      <br><legend>Tabla de Información de Venta</legend><br>
+      <tr>
+        <th>Folio de Venta</th>
+        <th>Fecha</th>
+        <th>RFC Empleado</th>
+        <th>Nombre Empleado</th>
+        <th>RFC Cliente</th>
+        <th>Nombre Cliente</th>
+        <th>IVA</th>
+        <th>Método de Pago</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><?=$tuplaMovimiento["folio_generador"]?></td>
+        <td><?=$tuplaVenta["fecha_venta"]?></td>
+        <td><?=$tuplaVenta["rfc_empleado"]?></td>
+        <td><?=$tuplaNombreEmpleado["nombre_empleado"]?></td>
+        <td><?=$tuplaVenta["id_cliente"]?></td>
+        <td><?=$tuplaNombreCliente["nombre"]?></td>
+        <td><?=$tuplaVenta["iva"]?></td>
+        <td><?=$tuplaVenta["metodo_pago"]?></td>
+      </tr>
+    </tbody>
+  </table>
+  <?php
+  }
+  else{
+    $stmtInfoDevolucion = $enlace->prepare("SELECT * FROM devolucion WHERE folio_devolucion = ?");
+    $stmtInfoDevolucion->bind_param("i", $tuplaMovimiento["folio_generador"]);
+    $stmtInfoDevolucion->execute();
+    $tuplaInfoDevolucion = $stmtInfoDevolucion->get_result()->fetch_assoc();
+    
+    $stmtInfoVenta = $enlace->prepare("SELECT fecha_venta FROM venta WHERE folio_venta = ?");
+    $stmtInfoVenta->bind_param("i", $tuplaInfoDevolucion["folio_venta"]);
+    $stmtInfoVenta->execute();
+    $tuplaFechaVenta = $stmtInfoVenta->get_result()->fetch_assoc();
+  
+    $stmtInfoEmpleado = $enlace->prepare("SELECT nombre_empleado FROM empleado WHERE rfc_empleado = ?");
+    $stmtInfoEmpleado->bind_param("s", $tuplaInfoDevolucion["rfc_empleado"]);
+    $stmtInfoEmpleado->execute();
+    $tuplaInfoEmpleado = $stmtInfoEmpleado->get_result()->fetch_assoc();
+    ?>
+    <table class="pure-table">
+      <thead>
+        <br><legend>Tabla de Información de la Devolución</legend><br>
+        <tr>
+          <th>Folio de Devolución</th>
+          <th>Fecha de la Devolución</th>
+          <th>Folio de Venta asociada</th>
+          <th>Fecha de la Venta</th>
+          <th>RFC Empleado</th>
+          <th>Nombre del Empleado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><?=$tuplaMovimiento["folio_generador"]?></td>
+          <td><?=$tuplaInfoDevolucion["fecha"]?></td>
+          <td><?=$tuplaInfoDevolucion["folio_venta"]?></td>
+          <td><?=$tuplaFechaVenta["fecha_venta"]?></td>
+          <td><?=$tuplaInfoDevolucion["rfc_empleado"]?></td>
+          <td><?=$tuplaInfoEmpleado["nombre_empleado"]?></td>
+        </tr>
+      </tbody>
+    </table>
+  
 <?php
+  }
 }
 ?>

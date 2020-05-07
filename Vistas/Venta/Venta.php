@@ -1,6 +1,5 @@
 <?php
 /*TODO
-*Agregar funcionalidad de dinero en caja para motivos de  devoluciones
 *Agregar columna descuento para calcular el descuento
 */
     session_start();
@@ -16,6 +15,39 @@
     if(!$enlace){
         echo "Error en la conexion del servidor";
     }
+
+    $consultarDatos = "SELECT folio_venta FROM venta ORDER BY folio_venta DESC LIMIT 1";
+    $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
+      
+    $rows = mysqli_num_rows($ejecutarConsultar);
+    if($rows == 0){
+      $folio = 1;
+    }
+    else{
+      $row = mysqli_fetch_array($ejecutarConsultar);
+      $folio = $row["folio_venta"]; //se guarda como cadena, entonces lo convertimos a int
+      $folio = (int)$folio;
+      $folio += 1;
+    }
+    
+    $stmtInfoEmpleado = $enlace->prepare("SELECT nombre_empleado FROM empleado WHERE rfc_empleado = ?");
+    $stmtInfoEmpleado->bind_param("s" ,$_SESSION["empleado"]);
+    $stmtInfoEmpleado->execute();
+
+    $infoEmpleado = $stmtInfoEmpleado->get_result();
+    
+    $tuplaInfoEmpleado= $infoEmpleado->fetch_assoc();
+    $nomEmpleado = $tuplaInfoEmpleado["nombre_empleado"];
+    
+    $stmtInfoCliente = $enlace->prepare("SELECT nombre, domicilio FROM cliente WHERE rfc = ?");
+    $stmtInfoCliente->bind_param("s" ,$_SESSION["cliente"]);
+    $stmtInfoCliente->execute();
+
+    $infoCliente = $stmtInfoCliente->get_result();
+    
+    $tuplaInfoCliente = $infoCliente->fetch_assoc();
+    $nomCliente = $tuplaInfoCliente["nombre"];
+    $dirCliente = $tuplaInfoCliente["domicilio"];
 ?>
 
  <!DOCTYPE html>
@@ -33,49 +65,43 @@
     <p>Aquí se muestra el total + IVA</p>
 </div>
 
-<form class="pure-form" method="post">
-    <input type="text" class="pure-input-rounded" placeholder="Departamento" name="busqueda">
-    <button type="submit" class="pure-button" name="buscar" value="buscando">Buscar</button>
-</form>
-    
 <?php
-    if(isset($_POST['confirmar'])){
-        $folio = 0;
-        //venta: folio que es autoincrementable, fecha, que conseguiremos en php, rfc de empleado y rfc de cliente, se registra solo una
-        //detalle_Venta: folio, clave de producto, cantidad, valor unitario e iva crear uno para cada producto
-        $consultarDatos = "SELECT folio_venta FROM venta ORDER BY folio_venta DESC LIMIT 1";
-        $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
-      
-        $rows = mysqli_num_rows($ejecutarConsultar);
-        if($rows == 0){
-          $folio = 1;
-        }
-        else{
-          $row = mysqli_fetch_array($ejecutarConsultar);
-          $folio = $row["folio_venta"]; //se guarda como cadena, entonces lo convertimos a int
-          $folio = (int)$folio;
-          $folio += 1;
-        }
-        
+  if(isset($_POST["cancelar"])){
+    header("Location: ../../Pantallas/Vendedor.php");
+    exit();
+  }
+?>
+
+<?php
+    if(isset($_POST['confirmar'])){ 
         $_SESSION["folio_venta"] = $folio;
     
         $fecha = date("Y-m-d");
         $rfc_emp = $_SESSION["empleado"];
         $rfc_cli = $_SESSION["cliente"];
       
+        $metodo = $_POST["metodo"];
+      
         $consultarDatos = "SELECT porcentaje FROM iva ORDER BY ABS(DATEDIFF(fecha, '$fecha')) LIMIT 1"; //conseguimos el porcentaje de IVA de la fecha más cercana a la actual
         $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
         $row = mysqli_fetch_array($ejecutarConsultar);
         $porcentaje =  $row["porcentaje"];
         
-        $consultarDatos = "INSERT INTO venta(fecha_venta, rfc_empleado, id_cliente, iva) values ('$fecha', '$rfc_emp', '$rfc_cli', $porcentaje)"; //registramos venta
+        $consultarDatos = "INSERT INTO venta(fecha_venta, rfc_empleado, id_cliente, iva, metodo_pago) values ('$fecha', '$rfc_emp', '$rfc_cli', $porcentaje, '$metodo')"; //registramos venta
         $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
+      
+        $dineroGenerado = 0; //con esto aumentaremos la cantidad de dinero total en caja
         
         foreach($_SESSION["orden"] as $id=>$info){
             $clave_producto = $id;
             $cantidad_producto = $_SESSION["orden"][$id]["cantidad"];
             $valor_unitario = $_SESSION["orden"][$id]["precio"];
+          
             
+            for($i = 0; $i < $cantidad_producto; $i++){
+              $dineroGenerado += $valor_unitario;
+            }
+
             $consultarDatos = "INSERT INTO detalle_venta(folio_venta,  clave_producto, cantidad, valor_unitario) values ($folio, $id, $cantidad_producto, $valor_unitario)"; //registramos un detalle por cada producto en la canasta
             $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
             
@@ -90,50 +116,22 @@
             $row = mysqli_fetch_array($ejecutarConsultar);
         }
         
+        if($metodo != "credito"){
+          $_SESSION["dinero_caja"] += $dineroGenerado; //solo modificamos el valor de efectivo en caja cuando la venta se hace con efectivo 
+        }
+      
         header("Location: Registro_Venta.php");
         exit();
     }
 ?>
-    
-<?php
-    if(isset($_POST['buscar'])){
-        $criterioBuscar = $_POST['busqueda'];
-        $consultarDatos = "SELECT * FROM producto where departamento = '$criterioBuscar'";
-        $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
-?>
-
-<table class="pure-table" id="productos">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Descripción</th>
-            <th>Stock</th>
-            <th>Departamento</th>
-            <th>Precio</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-        <?php
-        while($row = mysqli_fetch_array($ejecutarConsultar)) {
-        ?>
-        <tr>
-            <td><?=$row["clave_producto"]?></td>
-            <td><?=$row["nombre"]?></td>
-            <td><?=$row["descripcion"]?></td>
-            <td><?=$row["cantidad"]?></td>
-            <td><?=$row["departamento"]?></td>
-            <td><?=$row["precio"]?></td>
-        </tr>
-        <?php
-        }
-        ?>
-    </tbody>
-</table>
-<?php
-    }
-?>
+  
+<p>Le atiende: <strong><?=$nomEmpleado?></strong></p>
+  
+<p>Folio de la venta actual: <?=$folio?></p>
+<p>Fecha actual: <?=date("Y-m-d")?></p>
+<p>RFC de Cliente: <?=$_SESSION["cliente"]?></p>
+<p>Nombre del Cliente: <?=$nomCliente?></p>
+<p>Domicilio del Cliente: <?=$dirCliente?></p>
 
 <form class="pure-form" method="post" id="miFormulario">
     <fieldset>
@@ -149,8 +147,13 @@
     
 </div>
     
-<form method="post">
-        <input type="submit" class="pure-button" name="confirmar" value="Confirmar">
+<form method="post"> <!--Tal vez pasar esta funcionalidad a otro lugar-->
+    <label for="metodoEfectivo">Efectivo</label>
+    <input id="metodoEfectivo" name="metodo" type="radio" value="efectivo">
+    <label for="metodoCredito">Crédito</label>
+    <input id="metodoCredito" name="metodo" type="radio" value="credito"><br>
+    <input type="submit" class="pure-button" name="confirmar" value="Confirmar">
+    <input type="submit" class="pure-button" name="cancelar" value="Cancelar">
 </form>
     
 </body>
