@@ -1,9 +1,5 @@
 <?php
 session_start();
-/*TODO:
-*Agregar inserción de rfc de empleado en la tabla ajuste_inventario
-*Agregar campos descriptivos en el carrito de ajuste
-*/
 
 $servidor="localhost";
 $usuario="root";
@@ -111,8 +107,8 @@ if(isset($_POST["confirmar"])){
   
   
   $fecha = date("Y-m-d");
-  $stmtInsertarAjuste = $enlace->prepare("INSERT INTO ajuste_inventario ( fecha ) VALUES (?)");
-  $stmtInsertarAjuste->bind_param("s", $fecha);
+  $stmtInsertarAjuste = $enlace->prepare("INSERT INTO ajuste_inventario ( fecha , rfc_empleado) VALUES ( ? , ? )");
+  $stmtInsertarAjuste->bind_param("ss", $fecha, $_SESSION["empleado"]);
   
   $stmtInsertarDetalle = $enlace->prepare("INSERT INTO detalle_ajuste ( folio_ajuste ,  clave_producto ,  cantidad ,  motivo ) VALUES ( ? , ? , ? , ?)");
   $stmtInsertarDetalle->bind_param("iiis", $folioAjuste, $claveProducto, $cantidadProducto, $motivoProducto);
