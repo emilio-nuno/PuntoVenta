@@ -44,9 +44,23 @@ echo $_SESSION["dinero_caja"];
     </div>
     <h1>
       <ul>
-        <li>Producto</li>
-        <li>Empleado</li>
-        <li>Cliente</li>
+        <li>Cliente
+          <ul>
+            <li>Registrar Cliente</li>
+          </ul>
+        </li>
+        <li>Venta
+          <ul>
+            <li>Realizar Venta</li>
+            <li>Consulta de Ventas</li>
+          </ul>
+        </li>
+        <li>Devolución
+          <ul>
+            <li>Realizar Devolución</li>
+            <li>Consulta de Devoluciones</li>
+          </ul>
+        </li>
       </ul>
     </h1>
 </head>

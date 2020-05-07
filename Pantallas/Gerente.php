@@ -2,7 +2,7 @@
 /*TODO: Agregar validacion para corte de caja SOLO desde las 7 PM
 */
 $horaCorteDisponible = 19;
-$horaInicioJornada = 11;
+$horaInicioJornada = 10;
 
 function enRango($inicio, $fin){
   $horaActual = date("H");
@@ -57,9 +57,14 @@ function enRango($inicio, $fin){
     </div>
     <h1>
       <ul>
-        <li>Producto</li>
-        <li>Empleado</li>
-        <li>Cliente</li>
+        <li>Generar Corte de Caja</li>
+        <li>
+        Ajuste de Inventario
+          <ul>
+            <li>Registrar un ajuste</li>
+            <li>Consultar ajustes</li>
+          </ul>
+        </li>
       </ul>
     </h1>
 </head>

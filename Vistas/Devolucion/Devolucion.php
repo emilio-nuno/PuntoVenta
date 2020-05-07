@@ -127,14 +127,22 @@ if(isset($_POST["devolver"])){
       echo "Estás intentando regresar más productos de los que compraste";
     }
     else{
+      $consultarDatos = "SELECT * FROM producto where clave_producto = '$clave'";
+      $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
+      $row = mysqli_fetch_array($ejecutarConsultar);
+      
       $_SESSION["devolucion"][$clave]["cantidad"] = $_POST["cantidad"];
       $_SESSION["devolucion"][$clave]["motivo"] = $_POST["motivo"];
+      $_SESSION["devolucion"][$clave]["descripcion"] = $row["descripcion"];
+      $_SESSION["devolucion"][$clave]["nombre"] = $row["nombre"];
       ?>
       <table class="pure-table" id="productos">
         <thead>
           <legend>Productos Aceptados para Devolución</legend>
             <tr>
               <th>ID</th>
+              <th>Nombre</th>
+              <th>Descripción</th>
               <th>Cantidad</th>
               <th>Motivo</th>
           </tr>
@@ -146,6 +154,8 @@ if(isset($_POST["devolver"])){
           ?>
           <tr>
             <td><?=$id?></td>
+            <td><?=$_SESSION["devolucion"][$id]["nombre"]?></td>
+            <td><?=$_SESSION["devolucion"][$id]["descripcion"]?></td>
             <td><?=$_SESSION["devolucion"][$id]["cantidad"]?></td>
             <td><?=$_SESSION["devolucion"][$id]["motivo"]?></td>
           </tr>

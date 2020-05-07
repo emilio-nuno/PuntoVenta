@@ -2,6 +2,7 @@
 session_start();
 /*TODO:
 *Agregar inserción de rfc de empleado en la tabla ajuste_inventario
+*Agregar campos descriptivos en el carrito de ajuste
 */
 
 $servidor="localhost";
@@ -55,6 +56,13 @@ if(isset($_POST["ajustar"])){
     echo "El producto no existe en la base de datos";
   }
   else{
+    $consultarDatos = "SELECT * FROM producto where clave_producto = '$clave'";
+    $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
+    $row = mysqli_fetch_array($ejecutarConsultar);
+      
+
+    $_SESSION["ajuste"][$clave]["descripcion"] = $row["descripcion"];
+    $_SESSION["ajuste"][$clave]["nombre"] = $row["nombre"];
     $_SESSION["ajuste"][$clave]["cantidad"] = $cantidad;
     $_SESSION["ajuste"][$clave]["motivo"] = $motivo;?>
   
@@ -63,6 +71,8 @@ if(isset($_POST["ajustar"])){
           <br><legend>Productos listos para ajuste</legend><br>
           <tr>
             <th>Clave de Producto</th>
+            <th>Nombre</th>
+            <th>Descripción</th>
             <th>Cantidad</th>
             <th>Motivo</th>
           </tr>
@@ -71,6 +81,8 @@ if(isset($_POST["ajustar"])){
           <?php foreach($_SESSION["ajuste"] as $id=>$valor){ ?>
             <tr>
               <td><?=$id?></td>
+              <td><?=$_SESSION["ajuste"][$id]["nombre"]?></td>
+              <td><?=$_SESSION["ajuste"][$id]["descripcion"]?></td>
               <td><?=$_SESSION["ajuste"][$id]["cantidad"]?></td>
               <td><?=$_SESSION["ajuste"][$id]["motivo"]?></td>
             </tr>

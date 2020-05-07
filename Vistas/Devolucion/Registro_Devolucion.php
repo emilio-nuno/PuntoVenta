@@ -60,7 +60,7 @@ $cantidadGenerada += $cantidadDevolver;
 $stmtActualizarStock->execute();
 $stmtRegistroDetalle->execute();
 }
-  
+
 $stmtRegistroDevolucion->close();
 $stmtActualizarStock->close();
 $stmtVerificarCantidad->close();
@@ -103,6 +103,8 @@ echo "Se ha registrado la devolución de manera exitosa!";
     <legend>Productos Aceptados para Devolución</legend><br>
     <tr>
       <th>ID</th>
+      <th>Nombre</th>
+      <th>Descripción</th>
       <th>Cantidad</th>
       <th>Motivo</th>
     </tr>
@@ -113,6 +115,8 @@ echo "Se ha registrado la devolución de manera exitosa!";
     ?>
     <tr>
       <td><?=$id?></td>
+      <td><?=$_SESSION["devolucion"][$id]["nombre"]?></td>
+      <td><?=$_SESSION["devolucion"][$id]["descripcion"]?></td>
       <td><?=$_SESSION["devolucion"][$id]["cantidad"]?></td>
       <td><?=$_SESSION["devolucion"][$id]["motivo"]?></td>
     </tr>

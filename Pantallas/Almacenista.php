@@ -22,9 +22,12 @@
     </div>
     <h1>
       <ul>
-        <li>Producto</li>
-        <li>Empleado</li>
-        <li>Cliente</li>
+        <li>Movimiento de Almacén
+          <ul>
+            <li>Realizar un Movimiento</li>
+            <li>Consultar Movimientos</li>
+          </ul>
+        </li>
       </ul>
     </h1>
 </head>
