@@ -1,7 +1,6 @@
 <?php
 /*TODO:
 *Agregar funcionalidad pare regresar a a menú principal
-*Agregar funcionalidad para mostrar rfc de empleado que generó el ajuste
 */
 $servidor="localhost";
 $usuario="root";
@@ -47,7 +46,7 @@ else{
   
 <?php
 if(isset($_POST["buscar"])){
-  $stmtInfoAjuste = $enlace->prepare("SELECT folio_ajuste , fecha FROM ajuste_inventario WHERE folio_ajuste = ?");
+  $stmtInfoAjuste = $enlace->prepare("SELECT folio_ajuste , fecha , rfc_empleado FROM ajuste_inventario WHERE folio_ajuste = ?");
   $stmtInfoAjuste->bind_param("i", $_POST["folio"]);
   $stmtInfoAjuste->execute();
   $resultadoAjuste = $stmtInfoAjuste->get_result();
@@ -59,6 +58,10 @@ if(isset($_POST["buscar"])){
   
   $stmtInfoProducto = $enlace->prepare("SELECT nombre, descripcion FROM producto WHERE clave_producto = ?");
   $stmtInfoProducto->bind_param("i", $clave_producto);
+  
+  $stmtNombreEmpleado = $enlace->prepare("SELECT nombre_empleado FROM empleado WHERE rfc_empleado = ?");
+  $stmtNombreEmpleado->bind_param("s", $rfc);
+
 ?>
   <table class="pure-table">
     <thead>
@@ -66,13 +69,21 @@ if(isset($_POST["buscar"])){
       <tr>
         <th>Folio de Ajuste</th>
         <th>Fecha</th>
+        <th>RFC Empleado</th>
+        <th>Nombre Empleado</th>
       </tr>
     </thead>
     <tbody>
-      <?php while($tuplaAjuste = $resultadoAjuste->fetch_assoc()){?>
+      <?php while($tuplaAjuste = $resultadoAjuste->fetch_assoc()){
+      $rfc = $tuplaAjuste["rfc_empleado"];
+      $stmtNombreEmpleado->execute();
+      $nombre = $stmtNombreEmpleado->get_result()->fetch_assoc()["nombre_empleado"];
+      ?>
       <tr>
           <td><?=$tuplaAjuste["folio_ajuste"]?></td>
           <td><?=$tuplaAjuste["fecha"]?></td>
+          <td><?=$tuplaAjuste["rfc_empleado"]?></td>
+          <td><?=$nombre?></td>
       </tr>
       <?php }?>
     </tbody>
