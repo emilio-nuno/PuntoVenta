@@ -44,6 +44,7 @@
             $_SESSION["orden"][$idProducto]["precio"] = $row["precio"];
             $_SESSION["orden"][$idProducto]["nombre"] = $row["nombre"];
             $_SESSION["orden"][$idProducto]["descripcion"] = $row["descripcion"];
+            $_SESSION["orden"][$idProducto]["importe"] = $row["precio"] * $cantidadProducto;
         }
     }
     else{
@@ -52,6 +53,7 @@
             $_SESSION["orden"][$idProducto]["precio"] = $row["precio"];
             $_SESSION["orden"][$idProducto]["nombre"] = $row["nombre"];
             $_SESSION["orden"][$idProducto]["descripcion"] = $row["descripcion"];
+            $_SESSION["orden"][$idProducto]["importe"] = $row["precio"] * $cantidadProducto;
         }
         else{
             echo "No se pueden agregar 0 productos del id " . $idProducto . " al carrito"; 
@@ -68,6 +70,7 @@
             <th>Descripción</th>
             <th>Cantidad</th>
             <th>Precio Unitario</th>
+            <th>Importe</th>
         </tr>
     </thead>
     <tbody>
@@ -81,6 +84,7 @@
             <td><?=$_SESSION["orden"][$id]["descripcion"]?></td>
             <td><?=$_SESSION["orden"][$id]["cantidad"]?></td>
             <td><?=$_SESSION["orden"][$id]["precio"]?></td>
+            <td><?=$_SESSION["orden"][$id]["importe"]?></td>
         </tr>
         <?php
         }

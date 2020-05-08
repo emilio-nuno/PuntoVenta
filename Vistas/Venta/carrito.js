@@ -16,6 +16,7 @@ function MostrarInfoPago() {
     function(data) {
     $('#infoPago').html(data);
     $('#miFormulario')[0].reset();
+    $("#descProducto").html("");
     });
 }
 
