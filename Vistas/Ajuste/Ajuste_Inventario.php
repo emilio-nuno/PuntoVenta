@@ -17,6 +17,8 @@ if(mysqli_connect_errno()){
 <head>
   <title>Página de Devolución</title>
   <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css" integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
+  <script src="http://code.jquery.com/jquery-latest.js"></script>
+  <script src="../../Herramientas/MostrarDescripcion/mostrarDescripcion.js"></script>
 </head>
 
 <body>
@@ -24,11 +26,14 @@ if(mysqli_connect_errno()){
   <form class="pure-form" method="post">
     <fieldset>
 
-        <input type="text" placeholder="Clave del Producto" name="clave" required>
+        <input type="text" placeholder="Clave del Producto" name="clave" id="clave" onchange="MostrarDescripcion('#clave', '#descProducto');" required>
         <input type="number" placeholder="Cantidad" min="1" step="1" name="cantidad" required>
         <input type="text" placeholder="Motivo" name="motivo" required>
 
         <button type="submit" class="pure-button pure-button-primary" name="ajustar">Agregar a Ajuste</button>
+      
+        <div id="descProducto">
+        </div>
     </fieldset>
 </form>
   <form method="post">

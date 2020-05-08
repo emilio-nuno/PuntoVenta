@@ -56,7 +56,7 @@
     <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css" integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
     <script src="http://code.jquery.com/jquery-latest.js"></script>
     <script src="carrito.js"></script>
-    <script src="mostrarDescripcion.js"></script>
+    <script src="../../Herramientas/MostrarDescripcion/mostrarDescripcion.js"></script>
 </head>
 <body>
 
@@ -137,7 +137,7 @@
 <form class="pure-form" method="post" id="miFormulario">
     <fieldset>
 
-        <input type="text" placeholder="ID del producto" name="idProducto" id="idProducto" onchange="MostrarDescripcion();">
+        <input type="text" placeholder="ID del producto" name="idProducto" id="idProducto" onchange="MostrarDescripcion('#idProducto', '#descProducto');">
         <input type="text" placeholder="Cantidad Deseada" name="cantidadProducto" id="cantidadProducto">
 
         <button type="button" class="pure-button pure-button-primary" onclick="GenerarCarrito();">Agregar a Carrito</button>
