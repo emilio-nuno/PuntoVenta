@@ -10,6 +10,25 @@ $enlace = new mysqli($servidor, $usuario, $clave, $baseDeDatos);
 if(mysqli_connect_errno()){
   echo "Conexión a la base de datos fallida";
 }
+  
+$stmtFolioAjuste = $enlace->prepare("SELECT folio_ajuste FROM ajuste_inventario ORDER BY folio_ajuste DESC LIMIT 1"); //Verificamos el valor máximo de un folio
+$stmtFolioAjuste->execute();
+$resultado = $stmtFolioAjuste->get_result();
+if($resultado->num_rows == 0){
+  $folioAjuste = 1;
+}
+else{
+  $tupla = $resultado->fetch_assoc();
+  $folioAjuste = $tupla["folio_ajuste"];
+  $folioAjuste++;
+}
+
+$fecha = date("Y-m-d");
+
+$stmtNombreEmpleado = $enlace->prepare("SELECT nombre_empleado FROM empleado WHERE rfc_empleado = ?");
+$stmtNombreEmpleado->bind_param("s", $_SESSION["empleado"]);
+$stmtNombreEmpleado->execute();
+$tuplaNombreEmpleado = $stmtNombreEmpleado->get_result()->fetch_assoc();
 ?>
 
 <!DOCTYPE html>
@@ -22,6 +41,9 @@ if(mysqli_connect_errno()){
 </head>
 
 <body>
+  <p>Folio de Ajuste actual: <?=$folioAjuste?></p>
+  <strong>Nombre de Gerente: <?=$tuplaNombreEmpleado["nombre_empleado"]?></strong>
+  <p>Fecha actual: <?=$fecha?></p>
   <p>Por favor digite la información solicitada para cada uno de los productos pertinentes</p>
   <form class="pure-form" method="post">
     <fieldset>
@@ -98,20 +120,6 @@ if(isset($_POST["ajustar"])){
 
 <?php
 if(isset($_POST["confirmar"])){  
-  $stmtFolioAjuste = $enlace->prepare("SELECT folio_ajuste FROM ajuste_inventario ORDER BY folio_ajuste DESC LIMIT 1"); //Verificamos el valor máximo de un folio
-  $stmtFolioAjuste->execute();
-  $resultado = $stmtFolioAjuste->get_result();
-  if($resultado->num_rows == 0){
-    $folioAjuste = 1;
-  }
-  else{
-    $tupla = $resultado->fetch_assoc();
-    $folioAjuste = $tupla["folio_ajuste"];
-    $folioAjuste++;
-  }
-  
-  
-  $fecha = date("Y-m-d");
   $stmtInsertarAjuste = $enlace->prepare("INSERT INTO ajuste_inventario ( fecha , rfc_empleado) VALUES ( ? , ? )");
   $stmtInsertarAjuste->bind_param("ss", $fecha, $_SESSION["empleado"]);
   

@@ -80,8 +80,14 @@ $totalFlujos = 0;
     </tbody>
   
     <tfoot>
-      <th>Total de Ventas en efectivo</th>
-      <td><?=$totalVentasEfectivo?></td>
+      <tr>
+        <th>Total de Ventas en efectivo</th>
+        <td><?=$totalVentasEfectivo?></td>
+      </tr>
+      <tr>
+        <th>Total de Ventas en crédito</th>
+        <td><?=$totalVentasCredito?></td>
+      </tr>
     </tfoot>
 </table>
   

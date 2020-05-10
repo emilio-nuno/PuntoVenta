@@ -1,4 +1,4 @@
-function MostrarCarrito() {
+function DesplegarCarrito() {
     var idProducto = $("#idProducto").val();
     var cantidadProducto = $("#cantidadProducto").val();
     $.post("../../Herramientas/MostrarDescripcion/agregarCarrito.php", { idProducto: idProducto, cantidadProducto: cantidadProducto },
@@ -21,5 +21,5 @@ function MostrarInfoPago() {
 }
 
 function GenerarCarrito(){
-    MostrarCarrito();
+  DesplegarCarrito();
 }
