@@ -17,6 +17,8 @@ $rfc = $_SESSION["empleado"];
 <html>
 <head>
   <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css" integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
+  <script src="http://code.jquery.com/jquery-latest.js"></script>
+  <script src="../../Herramientas/MostrarDescripcion/mostrarDescripcion.js"></script>
   <title>Registro de Movimientos</title>
 </head>
 
@@ -93,10 +95,16 @@ if(isset($_POST["consultar"])){
       </tbody>
     </table>
   <?php } ?>
+  
+  <br>
+  <div id="resultado">
+
+  </div>
+  
   <form class="pure-form pure-form-stacked" method="post">
     <fieldset>
         <label for="folio">Folio Generador</label>
-        <input type="number" name="folio" id="folio" min="1" max="<?=$max?>" required>
+        <input type="number" name="folio" id="folio" min="1" max="<?=$max?>" onchange="MostrarInfoFolio('<?=$_SESSION["movimiento"]["motivo"]?>', '#folio', '#resultado')" required>
         <button type="submit" name="registrar" class="button-secondary pure-button">Registrar Movimiento</button>
     </fieldset>
   </form>

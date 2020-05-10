@@ -47,6 +47,14 @@ $infoEmpleado = $stmtInfoEmpleado->get_result();
     
 $tuplaInfoEmpleado= $infoEmpleado->fetch_assoc();
 $nomEmpleado = $tuplaInfoEmpleado["nombre_empleado"];
+
+$stmtProductosVenta = $enlace->prepare("SELECT clave_producto, cantidad, valor_unitario FROM detalle_venta WHERE folio_venta = ?");
+$stmtProductosVenta->bind_param("i", $_SESSION["folio_venta"]);
+$stmtProductosVenta->execute();
+$resultadoProductosVenta = $stmtProductosVenta->get_result();
+
+$stmtInfoProducto = $enlace->prepare("SELECT nombre, descripcion FROM producto WHERE clave_producto = ?");
+$stmtInfoProducto->bind_param("i", $clave_producto);
 ?>
 
 <!DOCTYPE html>
@@ -64,6 +72,35 @@ $nomEmpleado = $tuplaInfoEmpleado["nombre_empleado"];
   <p>Folio de la devolución actual: <?=$folio?></p>
   <p>Fecha actual: <?=date("Y-m-d")?></p>
   <p>Venta asociada a esta Devolución: <?=$_SESSION["folio_venta"]?></p>
+  
+  <!--Aquí va la tabla de productos-->
+  <table class="pure-table">
+        <thead>
+          <legend>Productos vendidos en la Venta asociada</legend>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Descripción</th>
+              <th>Cantidad</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <?php while($tuplaProductoVenta = $resultadoProductosVenta->fetch_assoc()){ 
+            $clave_producto = $tuplaProductoVenta["clave_producto"];
+            $stmtInfoProducto->execute();
+            $tuplaInfoProducto = $stmtInfoProducto->get_result()->fetch_assoc();
+            $nombre = $tuplaInfoProducto["nombre"];
+            $desc = $tuplaInfoProducto["descripcion"];
+            ?>
+              <td><?=$tuplaProductoVenta["clave_producto"]?></td>
+              <td><?=$nombre?></td>
+              <td><?=$desc?></td>
+              <td><?=$tuplaProductoVenta["cantidad"]?></td>
+          </tr>
+          <?php } ?>
+        </tbody>
+      </table> 
   
   <p>Vendedor, por favor <span style="color:red;">verifique</span> los productos entregados por el cliente antes de llenar el formulario para cada producto</p>
   <form class="pure-form" method="post">

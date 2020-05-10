@@ -109,6 +109,7 @@ if(isset($_POST["buscar"])){
         <th>Descripción</th>
         <th>Cantidad</th>
         <th>Valor Unitario</th>
+        <th>Importe</th>
       </tr>
     </thead>
     <tbody>
@@ -126,6 +127,7 @@ if(isset($_POST["buscar"])){
         <td><?=$tuplaInfoProducto["descripcion"]?></td>
         <td><?=$tupla["cantidad"]?></td>
         <td><?=$tupla["valor_unitario"]?></td>
+        <td><?=$tupla["cantidad"] * $tupla["valor_unitario"]?></td>
       </tr>
       <?php }?>
     </tbody>
@@ -136,12 +138,14 @@ if(isset($_POST["buscar"])){
       <br><legend>Información de Pago</legend><br>
       <tr>
         <th>Subtotal de la Venta</th>
+        <th>IVA sobre el Subtotal</th>
         <th>Total de la Venta</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><?=$subtotal?></td>
+        <td><?=$subtotal * $tuplaVenta["iva"]?></td>
         <td><?=$subtotal + ($subtotal * $tuplaVenta["iva"])?></td>
       </tr>
     </tbody>
