@@ -97,6 +97,7 @@ if(isset($_POST["buscar"])){
     </tbody>
   </table>
   <?php
+  if($tuplaMovimiento["motivo"] == "compra_cliente" || $tuplaMovimiento["motivo"] == "devolucion_cliente"){
   if($tuplaMovimiento["motivo"] == "compra_cliente"){
     $stmtVenta = $enlace->prepare("SELECT fecha_venta, rfc_empleado, id_cliente, iva, metodo_pago FROM venta WHERE folio_venta = ?");
     $stmtVenta->bind_param("i", $tuplaMovimiento["folio_generador"]);
@@ -187,7 +188,12 @@ if(isset($_POST["buscar"])){
       </tbody>
     </table>
   
-<?php } ?>
+<?php 
+  } } else{
+    $stmtProductosMovimiento->execute();
+    $resultadoProductos = $stmtProductosMovimiento->get_result();
+  } 
+  ?>
   <table class="pure-table">
     <thead>
       <br><legend>Desglose de Productos</legend><br>
