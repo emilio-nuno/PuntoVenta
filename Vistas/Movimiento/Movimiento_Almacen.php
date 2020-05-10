@@ -11,6 +11,11 @@ if(mysqli_connect_errno()){
 }
 
 $rfc = $_SESSION["empleado"];
+
+$stmtFolioActual = $enlace->prepare("SELECT folio_movimiento FROM movimiento_almacen ORDER BY folio_movimiento DESC");
+$stmtFolioActual->execute();
+
+$folioActual = $stmtFolioActual->get_result()->fetch_assoc()["folio_movimiento"] + 1;
 ?>
 
 <!DOCTYPE html>
@@ -31,7 +36,9 @@ $rfc = $_SESSION["empleado"];
       
       <select id="motivo" name="motivo" required>
         <option value="compra_cliente">Salida - Compra de Cliente</option>
+        <option value="devolucion_proveedor">Salida - Devolución a Proveedor</option>
         <option value="devolucion_cliente">Entrada - Devolución de Cliente</option>
+        <option value="compra_proveedor">Entrada - Compra a Proveedor</option>
       </select>
       
       <button type="submit" class="pure-button pure-button-primary" name="consultar">Consultar Folios Generadores</button>
@@ -40,12 +47,52 @@ $rfc = $_SESSION["empleado"];
 </body>
 </html>
 
+<!--Poner registro de movimiento aqui-->
+<?php
+if(isset($_POST["confirmar"])){
+   $fecha = $_SESSION["movimiento"]["fecha"];
+    $tipo = $_SESSION["movimiento"]["tipo"];
+    $motivo = $_SESSION["movimiento"]["motivo"];
+    $folio_gen = $_POST["folio"];
+    
+    $stmtInsertarMovimiento = $enlace->prepare("INSERT INTO movimiento_almacen ( fecha ,  tipo ,  id_empleado ,  motivo ,  folio_generador ) VALUES ( ? , ? , ? , ?, ? )");
+    $stmtInsertarMovimiento->bind_param("ssssi", $fecha, $tipo, $rfc, $motivo, $folio_gen);
+    $stmtInsertarMovimiento->execute();
+    
+    unset($_SESSION["movimiento"]);
+  
+    $stmtInsertarDetalle = $enlace->prepare("INSERT INTO  detalle_movimiento ( folio_movimiento ,  clave_producto ,  cantidad ) VALUES (? , ? , ?)");
+    $stmtInsertarDetalle->bind_param("iii", $folioActual, $id, $cantidad);
+  
+    foreach($_SESSION["orden"] as $id=>$info){
+      $cantidad = $_SESSION["orden"][$id]["cantidad"];
+      $stmtInsertarDetalle->execute();
+    }
+  
+    unset($_SESSION["orden"]);
+    
+    if($enlace->affected_rows == 0){
+      echo "Hubo un problema al intentar crear el registro, intente luego";
+    }
+    else{
+      echo "Registro creado con éxito!";
+    }
+}
+?>
+
 <?php
 if(isset($_POST["consultar"])){
   $_SESSION["movimiento"]["motivo"] =  $_POST["motivo"];
   $_SESSION["movimiento"]["fecha"] =  $_POST["fecha"];
-  $_SESSION["movimiento"]["tipo"] =  $_POST["motivo"] == "compra_cliente" ? "salida" : "entrada";
   
+  if($_POST["motivo"] == "compra_cliente" || $_POST["motivo"] == "devolucion_proveedor"){
+    $_SESSION["movimiento"]["tipo"] = "salida";
+  }
+  else{
+    $_SESSION["movimiento"]["tipo"] = "entrada";
+  }
+  
+  if($_POST["motivo"] == "compra_cliente" || $_POST["motivo"] == "devolucion_cliente"){
   if($_POST["motivo"] == "compra_cliente"){
     $stmtFoliosVenta = $enlace->prepare("SELECT folio_venta, fecha_venta FROM venta ORDER BY folio_venta ASC");
     $stmtFoliosVenta->execute();
@@ -109,6 +156,37 @@ if(isset($_POST["consultar"])){
     </fieldset>
   </form>
 <?php
+  }
+  else{
+    unset($_SESSION["orden"]);
+?>
+
+  <form class="pure-form" method="post" id="miFormulario">
+      <fieldset>
+
+          <input type="text" placeholder="ID del producto" name="idProducto" id="idProducto" onchange="MostrarDescripcion('#idProducto', '#descProducto');" required>
+          <input type="text" placeholder="Cantidad Deseada" name="cantidadProducto" id="cantidadProducto" required>
+
+          <button type="button" class="pure-button pure-button-primary" onclick="MostrarCarrito();">Agregar a Carrito</button>
+      
+          <div id="descProducto">
+          </div>
+      </fieldset>
+  </form>
+    
+<div id="resultados">
+    
+</div>
+
+<br>
+<form method="post" class="pure-form">
+    <input type="number" name="folio" placeholder="Folio" step="1" required>
+    <input type="submit" name="confirmar" value="Confirmar">
+</form>
+
+<?php
+    
+  }
 }
 ?>
 

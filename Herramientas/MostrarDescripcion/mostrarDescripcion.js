@@ -18,3 +18,13 @@ function MostrarInfoFolio(motivo, elementoClave, contenedorResultado){
     $(contenedorResultado).html(data);
 });
 }
+
+function MostrarCarrito() {
+    var idProducto = $("#idProducto").val();
+    var cantidadProducto = $("#cantidadProducto").val();
+    $.post("../../Herramientas/MostrarDescripcion/agregarCarrito.php", { idProducto: idProducto, cantidadProducto: cantidadProducto },
+    function(data) {
+    $('#resultados').html(data);
+    $('#miFormulario')[0].reset();
+    });
+}
