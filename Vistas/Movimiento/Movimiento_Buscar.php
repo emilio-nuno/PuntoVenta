@@ -24,6 +24,9 @@ else{
   $tupla = $resultado->fetch_assoc();
   $max = $tupla["folio_movimiento"];
 }
+
+$stmtInfoProducto = $enlace->prepare("SELECT nombre, descripcion, cantidad FROM producto WHERE clave_producto = ?");
+$stmtInfoProducto->bind_param("i", $claveProducto);
 ?>
 
 <DOCTYPE !html>
@@ -48,6 +51,15 @@ if(isset($_POST["buscar"])){
   $stmtBuscar->bind_param("i", $_POST["folio"]);
   $stmtBuscar->execute();
   $tuplaMovimiento = $stmtBuscar->get_result()->fetch_assoc();
+  
+  $stmtProductosVenta = $enlace->prepare("SELECT clave_producto, cantidad, valor_unitario FROM detalle_venta WHERE folio_venta = ?");
+  $stmtProductosVenta->bind_param("i", $tuplaMovimiento["folio_generador"]);
+  
+  $stmtProductosDevolucion = $enlace->prepare("SELECT clave_producto, cantidad, motivo FROM detalle_devolucion WHERE folio_devolucion = ?");
+  $stmtProductosDevolucion->bind_param("i", $tuplaMovimiento["folio_generador"]);
+  
+  $stmtProductosMovimiento = $enlace->prepare("SELECT clave_producto, cantidad FROM detalle_movimiento WHERE folio_movimiento = ?");
+  $stmtProductosMovimiento->bind_param("i", $tuplaMovimiento["folio_generador"]);
   
   $rfc_emp = $tuplaMovimiento["id_empleado"];
   
@@ -99,6 +111,9 @@ if(isset($_POST["buscar"])){
     $rfc_cli = $tuplaVenta["id_cliente"];
     $stmtNombreCliente->execute();
     $tuplaNombreCliente = $stmtNombreCliente->get_result()->fetch_assoc();
+    
+    $stmtProductosVenta->execute();
+    $resultadoProductos = $stmtProductosVenta->get_result();
     ?>
     <table class="pure-table">
     <thead>
@@ -144,6 +159,9 @@ if(isset($_POST["buscar"])){
     $stmtInfoEmpleado->bind_param("s", $tuplaInfoDevolucion["rfc_empleado"]);
     $stmtInfoEmpleado->execute();
     $tuplaInfoEmpleado = $stmtInfoEmpleado->get_result()->fetch_assoc();
+    
+    $stmtProductosDevolucion->execute();
+    $resultadoProductos = $stmtProductosDevolucion->get_result();
     ?>
     <table class="pure-table">
       <thead>
@@ -169,7 +187,34 @@ if(isset($_POST["buscar"])){
       </tbody>
     </table>
   
-<?php
-  }
-}
-?>
+<?php } ?>
+  <table class="pure-table">
+    <thead>
+      <br><legend>Desglose de Productos</legend><br>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Descripción</th>
+        <th>Cantidad</th>
+        <?= $tuplaMovimiento["motivo"] == "compra_cliente" ? "<th>Valor Unitario</th><th>Importe</th>" : ""?>
+        <?= $tuplaMovimiento["motivo"] == "devolucion_cliente" ? "<th>Motivo</th>" : ""?>
+      </tr>
+    </thead>
+    <tbody>
+      <?php while($tuplaProductos = $resultadoProductos->fetch_assoc()){
+        $claveProducto = $tuplaProductos["clave_producto"];
+        $stmtInfoProducto->execute();
+        $tuplaProducto = $stmtInfoProducto->get_result()->fetch_assoc();
+      ?>
+      <tr>
+        <td><?=$claveProducto?></td>
+        <td><?=$tuplaProducto["nombre"]?></td>
+        <td><?=$tuplaProducto["descripcion"]?></td>
+        <td><?=$tuplaProductos["cantidad"]?></td>
+        <?= $tuplaMovimiento["motivo"] == "compra_cliente" ? "<td>" . $tuplaProductos["valor_unitario"] . "</td>" . "<td>" . $tuplaProductos["cantidad"] * $tuplaProductos["valor_unitario"]. "</td>" : ""?>
+        <?= $tuplaMovimiento["motivo"] == "devolucion_cliente" ? "<td>" . $tuplaProductos["motivo"] . "</td>" : ""?>
+      </tr>
+      <?php } ?>
+    </tbody>
+  </table>
+<?php } ?>
