@@ -137,24 +137,16 @@ function selectElement(id, valueToSelect){
     $stmtFoliosVenta->execute();
     $resultadoFoliosVenta = $stmtFoliosVenta->get_result();
     ?>
-    <table class="pure-table">
-      <thead>
-          <tr>
-            <th>Folio de Venta</th>
-            <th>Fecha</th>
-          </tr>
-      </thead>
-      <tbody>
-        <?php while($tuplaFolioVenta = $resultadoFoliosVenta->fetch_assoc()){
+
+    <label for="ventas">Ventas:</label>
+    <select id="ventas">
+      <?php while($tuplaFolioVenta = $resultadoFoliosVenta->fetch_assoc()){ 
         $max = $tuplaFolioVenta["folio_venta"];
-        ?>
-        <tr>
-          <td><?=$tuplaFolioVenta["folio_venta"]?></td>
-          <td><?=$tuplaFolioVenta["fecha_venta"]?></td>
-        </tr>
-        <?php } ?>
-      </tbody>
-    </table>
+      ?>
+      <option value="<?=$tuplaFolioVenta["folio_venta"]?>"><?=$tuplaFolioVenta["folio_venta"]?></option>
+      <?php } ?>
+    </select>
+
 <?php
   }
   else{
@@ -162,24 +154,14 @@ function selectElement(id, valueToSelect){
     $stmtFoliosDevolucion->execute();
     $resultadoFoliosDevolucion = $stmtFoliosDevolucion->get_result();?>
 
-    <table class="pure-table">
-      <thead>
-          <tr>
-            <th>Folio de Devolución</th>
-            <th>Fecha</th>
-          </tr>
-      </thead>
-      <tbody>
-        <?php while($tuplaFolioDevolucion = $resultadoFoliosDevolucion->fetch_assoc()){
+    <label for="devoluciones">Devoluciones:</label>
+    <select id="devoluciones">
+      <?php while($tuplaFolioDevolucion = $resultadoFoliosDevolucion->fetch_assoc()){ 
         $max = $tuplaFolioDevolucion["folio_devolucion"];
-        ?>
-        <tr>
-          <td><?=$tuplaFolioDevolucion["folio_devolucion"]?></td>
-          <td><?=$tuplaFolioDevolucion["fecha"]?></td>
-        </tr>
-        <?php } ?>
-      </tbody>
-    </table>
+      ?>
+      <option value="<?=$tuplaFolioDevolucion["folio_devolucion"]?>"><?=$tuplaFolioDevolucion["folio_devolucion"]?></option>
+      <?php } ?>
+    </select>
   <?php } ?>
   
   <br>
