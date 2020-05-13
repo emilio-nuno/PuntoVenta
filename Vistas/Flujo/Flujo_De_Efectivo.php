@@ -35,6 +35,7 @@ if(isset($_POST["confirmar"])){
   $stmtInsertarFlujo->bind_param("sssi", $fecha, $hora, $rfc_empleado, $_POST["cantidad"]);
   $stmtInsertarFlujo->execute();
   $stmtInsertarFlujo->close();
+  $_SESSION["dinero_caja"] -= $_POST["cantidad"];
   header("Location: ../../Pantallas/Vendedor.php");
   exit();
 }
