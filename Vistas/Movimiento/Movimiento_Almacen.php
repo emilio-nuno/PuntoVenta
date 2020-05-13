@@ -17,8 +17,14 @@ $stmtFolioActual->execute();
 
 $folioActual = $stmtFolioActual->get_result()->fetch_assoc()["folio_movimiento"] + 1;
 
-$stmtActualizarCantidadProducto = $enlace->prepare("UPDATE producto SET cantidad = cantidad - ? WHERE clave_producto = ?");
-$stmtActualizarCantidadProducto->bind_param("ii", $cantidadCambiar, $claveProducto);
+$stmtAumentarCantidadStock = $enlace->prepare("UPDATE producto SET cantidad = cantidad + ? WHERE clave_producto = ?");
+$stmtAumentarCantidadStock->bind_param("ii", $cantidad, $id);
+
+$stmtDisminuirCantidadStock = $enlace->prepare("UPDATE producto SET cantidad = cantidad - ? WHERE clave_producto = ?");
+$stmtDisminuirCantidadStock->bind_param("ii", $cantidad, $id);
+
+$stmtBuscarFolioGen = $enlace->prepare("SELECT * FROM movimiento_almacen WHERE motivo = ? AND folio_generador = ?"); //verificamos que el folio no exista para algún otro registro con el mismo motivo
+$stmtBuscarFolioGen->bind_param("si", $motivo, $folio_gen);
 ?>
 
 
@@ -54,35 +60,52 @@ $stmtActualizarCantidadProducto->bind_param("ii", $cantidadCambiar, $claveProduc
 
 <!--Poner registro de movimiento aqui-->
 <?php
-if(isset($_POST["confirmar"])){
+if(isset($_POST["confirmar"])){ //este es para operaciones de proveedor
    $fecha = $_SESSION["movimiento"]["fecha"];
     $tipo = $_SESSION["movimiento"]["tipo"];
     $motivo = $_SESSION["movimiento"]["motivo"];
     $folio_gen = $_POST["folio"];
-    
-    $stmtInsertarMovimiento = $enlace->prepare("INSERT INTO movimiento_almacen ( fecha ,  tipo ,  id_empleado ,  motivo ,  folio_generador ) VALUES ( ? , ? , ? , ?, ? )");
-    $stmtInsertarMovimiento->bind_param("ssssi", $fecha, $tipo, $rfc, $motivo, $folio_gen);
-    $stmtInsertarMovimiento->execute();
-    
-    unset($_SESSION["movimiento"]);
   
-    $stmtInsertarDetalle = $enlace->prepare("INSERT INTO  detalle_movimiento ( folio_movimiento ,  clave_producto ,  cantidad ) VALUES (? , ? , ?)");
-    $stmtInsertarDetalle->bind_param("iii", $folioActual, $id, $cantidad);
+    //buscarn folio dado en base de datos y si existe, no insertar nada y mostrar mensaje de error si no continuar normalmente
+    $stmtBuscarFolioGen->execute();
+    $resultadoBuscar = $stmtBuscarFolioGen->get_result();
   
-    foreach($_SESSION["orden"] as $id=>$info){
-      $cantidad = $_SESSION["orden"][$id]["cantidad"];
-      $stmtInsertarDetalle->execute();
-    }
-  
-    unset($_SESSION["orden"]);
+    if($resultadoBuscar->num_rows == 0){ 
+      $stmtInsertarMovimiento = $enlace->prepare("INSERT INTO movimiento_almacen ( fecha ,  tipo ,  id_empleado ,  motivo ,  folio_generador ) VALUES ( ? , ? , ? , ?, ? )");
+      $stmtInsertarMovimiento->bind_param("ssssi", $fecha, $tipo, $rfc, $motivo, $folio_gen);
+      $stmtInsertarMovimiento->execute();
     
-    if($enlace->affected_rows == 0){
-      echo "Hubo un problema al intentar crear el registro, intente luego";
+      unset($_SESSION["movimiento"]);
+  
+      $stmtInsertarDetalle = $enlace->prepare("INSERT INTO  detalle_movimiento ( folio_movimiento ,  clave_producto ,  cantidad ) VALUES (? , ? , ?)");
+      $stmtInsertarDetalle->bind_param("iii", $folioActual, $id, $cantidad);
+  
+      foreach($_SESSION["orden"] as $id=>$info){
+        $cantidad = $_SESSION["orden"][$id]["cantidad"];
+      
+        if($motivo == "compra_proveedor"){
+          $stmtAumentarCantidadStock->execute();
+        }
+        else{
+          $stmtDisminuirCantidadStock->execute();
+        }
+      
+        $stmtInsertarDetalle->execute();
+      }
+  
+      unset($_SESSION["orden"]);
+    
+      if($enlace->affected_rows == 0){
+        echo "Hubo un problema al intentar crear el registro, intente luego";
+      }
+      else{
+        echo "Registro creado con éxito!";
+      } 
     }
     else{
-      echo "Registro creado con éxito!";
+      echo "Ya existe un movimiento relacionado a ese folio generador";
     }
-}
+  }
 ?>
 
 <?php
@@ -207,7 +230,7 @@ function selectElement(id, valueToSelect){
 ?>
 
 <?php
-  if(isset($_POST["registrar"])){
+  if(isset($_POST["registrar"])){ //este es para operaciones de cliente
     $fecha = $_SESSION["movimiento"]["fecha"];
     $tipo = $_SESSION["movimiento"]["tipo"];
     $motivo = $_SESSION["movimiento"]["motivo"];
