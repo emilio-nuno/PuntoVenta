@@ -231,23 +231,57 @@ function selectElement(id, valueToSelect){
 
 <?php
   if(isset($_POST["registrar"])){ //este es para operaciones de cliente
+    $stmtConseguirProductosDevolucion = $enlace->prepare("SELECT clave_producto, cantidad FROM detalle_devolucion WHERE folio_devolucion = ?");
+    $stmtConseguirProductosDevolucion->bind_param("i", $folio_gen);
+    
+    $stmtConseguirProductosVenta = $enlace->prepare("SELECT clave_producto, cantidad FROM detalle_venta WHERE folio_venta = ?");
+    $stmtConseguirProductosVenta->bind_param("i", $folio_gen);
+    
     $fecha = $_SESSION["movimiento"]["fecha"];
     $tipo = $_SESSION["movimiento"]["tipo"];
     $motivo = $_SESSION["movimiento"]["motivo"];
     $folio_gen = $_POST["folio"];
     
-    $stmtInsertarMovimiento = $enlace->prepare("INSERT INTO movimiento_almacen ( fecha ,  tipo ,  id_empleado ,  motivo ,  folio_generador ) VALUES ( ? , ? , ? , ?, ? )");
-    $stmtInsertarMovimiento->bind_param("ssssi", $fecha, $tipo, $rfc, $motivo, $folio_gen);
-    $stmtInsertarMovimiento->execute();
+    //buscarn folio dado en base de datos y si existe, no insertar nada y mostrar mensaje de error si no continuar normalmente
+    $stmtBuscarFolioGen->execute();
+    $resultadoBuscar = $stmtBuscarFolioGen->get_result();
+  
+    if($resultadoBuscar->num_rows == 0){
+      $stmtInsertarMovimiento = $enlace->prepare("INSERT INTO movimiento_almacen ( fecha ,  tipo ,  id_empleado ,  motivo ,  folio_generador ) VALUES ( ? , ? , ? , ?, ? )");
+      $stmtInsertarMovimiento->bind_param("ssssi", $fecha, $tipo, $rfc, $motivo, $folio_gen);
+      $stmtInsertarMovimiento->execute();
+      
+      
+      if($motivo == "compra_cliente"){
+        $stmtConseguirProductosVenta->execute();
+        $resultadoConsulta = $stmtConseguirProductosVenta->get_result();
+        while($tuplaProducto = $resultadoConsulta->fetch_assoc()){
+          $id = $tuplaProducto["clave_producto"];
+          $cantidad = $tuplaProducto["cantidad"];
+          $stmtDisminuirCantidadStock->execute();
+        }
+      }
+      else{
+        $stmtConseguirProductosDevolucion->execute();
+        $resultadoConsulta = $stmtConseguirProductosDevolucion->get_result();
+        while($tuplaProducto = $resultadoConsulta->fetch_assoc()){
+          $id = $tuplaProducto["clave_producto"];
+          $cantidad = $tuplaProducto["cantidad"];
+          $stmtAumentarCantidadStock->execute();
+        }
+      }
     
-    unset($_SESSION["movimiento"]);
+      unset($_SESSION["movimiento"]);
     
-    if($enlace->affected_rows == 0){
-      echo "Hubo un problema al intentar crear el registro, intente luego";
+      if($enlace->affected_rows == 0){
+        echo "Hubo un problema al intentar crear el registro, intente luego";
+      }
+      else{
+        echo "Registro creado con éxito!";
+      } 
     }
     else{
-      echo "Registro creado con éxito!";
+      echo "Ya existe un movimiento relacionado a ese folio generador";
     }
-    
   }
 ?>
