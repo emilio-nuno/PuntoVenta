@@ -28,6 +28,7 @@ $folioActual = $stmtFolioActual->get_result()->fetch_assoc()["folio_movimiento"]
 </head>
 
 <body>
+  <p>Folio del Movimiento actual: <?=$folioActual?></p>
   <form method="post" class="pure-form pure-form-stacked">
     <fieldset>
       <label for="fecha">Fecha</label>
@@ -84,7 +85,18 @@ if(isset($_POST["confirmar"])){
 if(isset($_POST["consultar"])){
   $_SESSION["movimiento"]["motivo"] =  $_POST["motivo"];
   $_SESSION["movimiento"]["fecha"] =  $_POST["fecha"];
-  
+?>
+
+<script type="text/javascript">
+selectElement('motivo', '<?=$_POST["motivo"]?>')
+
+function selectElement(id, valueToSelect){
+  let element = document.getElementById(id);
+  element.value = valueToSelect;
+}
+</script>
+
+<?php
   if($_POST["motivo"] == "compra_cliente" || $_POST["motivo"] == "devolucion_proveedor"){
     $_SESSION["movimiento"]["tipo"] = "salida";
   }
