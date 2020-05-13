@@ -16,7 +16,11 @@ $stmtFolioActual = $enlace->prepare("SELECT folio_movimiento FROM movimiento_alm
 $stmtFolioActual->execute();
 
 $folioActual = $stmtFolioActual->get_result()->fetch_assoc()["folio_movimiento"] + 1;
+
+$stmtActualizarCantidadProducto = $enlace->prepare("UPDATE producto SET cantidad = cantidad - ? WHERE clave_producto = ?");
+$stmtActualizarCantidadProducto->bind_param("ii", $cantidadCambiar, $claveProducto);
 ?>
+
 
 <!DOCTYPE html>
 <html>

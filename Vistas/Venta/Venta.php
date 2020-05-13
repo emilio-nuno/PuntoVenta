@@ -105,16 +105,6 @@
 
             $consultarDatos = "INSERT INTO detalle_venta(folio_venta,  clave_producto, cantidad, valor_unitario) values ($folio, $id, $cantidad_producto, $valor_unitario)"; //registramos un detalle por cada producto en la canasta
             $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
-            
-            $consultarDatos = "SELECT cantidad FROM producto WHERE clave_producto = $id"; //consultamos el stock de cada producto 
-            $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
-            $row = mysqli_fetch_array($ejecutarConsultar);
-            $cantidadNueva = $row["cantidad"];
-            $cantidadNueva -= $cantidad_producto;
-            
-            $consultarDatos = "UPDATE producto SET cantidad = $cantidadNueva WHERE clave_producto = $id"; //actualizamos el stock de los productos para que reflejen la venta
-            $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
-            $row = mysqli_fetch_array($ejecutarConsultar);
         }
         
         if($metodo != "credito"){
