@@ -133,36 +133,18 @@ function selectElement(id, valueToSelect){
   
   if($_POST["motivo"] == "compra_cliente" || $_POST["motivo"] == "devolucion_cliente"){
   if($_POST["motivo"] == "compra_cliente"){
-    $stmtFoliosVenta = $enlace->prepare("SELECT folio_venta, fecha_venta FROM venta ORDER BY folio_venta ASC");
+    $stmtFoliosVenta = $enlace->prepare("SELECT folio_venta as folio, fecha_venta as fecha FROM venta WHERE folio_venta NOT IN(SELECT folio_generador FROM movimiento_almacen WHERE motivo = 'compra_cliente') ORDER BY folio ASC");
     $stmtFoliosVenta->execute();
-    $resultadoFoliosVenta = $stmtFoliosVenta->get_result();
+    $resultadoFolio = $stmtFoliosVenta->get_result();
     ?>
-
-    <label for="ventas">Ventas:</label>
-    <select id="ventas">
-      <?php while($tuplaFolioVenta = $resultadoFoliosVenta->fetch_assoc()){ 
-        $max = $tuplaFolioVenta["folio_venta"];
-      ?>
-      <option value="<?=$tuplaFolioVenta["folio_venta"]?>"><?=$tuplaFolioVenta["folio_venta"]?></option>
-      <?php } ?>
-    </select>
 
 <?php
   }
   else{
-    $stmtFoliosDevolucion = $enlace->prepare("SELECT folio_devolucion, fecha FROM devolucion ORDER BY folio_devolucion ASC");
+    $stmtFoliosDevolucion = $enlace->prepare("SELECT folio_devolucion as folio, fecha FROM devolucion WHERE folio_devolucion NOT IN(SELECT folio_generador FROM movimiento_almacen WHERE motivo = 'devolucion_cliente') ORDER BY folio ASC");
     $stmtFoliosDevolucion->execute();
-    $resultadoFoliosDevolucion = $stmtFoliosDevolucion->get_result();?>
-
-    <label for="devoluciones">Devoluciones:</label>
-    <select id="devoluciones">
-      <?php while($tuplaFolioDevolucion = $resultadoFoliosDevolucion->fetch_assoc()){ 
-        $max = $tuplaFolioDevolucion["folio_devolucion"];
-      ?>
-      <option value="<?=$tuplaFolioDevolucion["folio_devolucion"]?>"><?=$tuplaFolioDevolucion["folio_devolucion"]?></option>
-      <?php } ?>
-    </select>
-  <?php } ?>
+    $resultadoFolio = $stmtFoliosDevolucion->get_result(); 
+  }?>
   
   <br>
   <div id="resultado">
@@ -171,8 +153,15 @@ function selectElement(id, valueToSelect){
   
   <form class="pure-form pure-form-stacked" method="post">
     <fieldset>
-        <label for="folio">Folio Generador</label>
-        <input type="number" name="folio" id="folio" min="1" max="<?=$max?>" onchange="MostrarInfoFolio('<?=$_SESSION["movimiento"]["motivo"]?>', '#folio', '#resultado')" required>
+        <label for="folio">Folios registrados:</label>
+        <select id="folio" name="folio" onchange="MostrarInfoFolio('<?=$_SESSION["movimiento"]["motivo"]?>', '#folio', '#resultado')" required>
+        <?php while($tuplaFolio = $resultadoFolio->fetch_assoc()){ 
+          $max = $tuplaFolio["folio"];
+        ?>
+          <option value="<?=$tuplaFolio["folio"]?>"><?=$tuplaFolio["folio"]?></option>
+        <?php } ?>
+        </select>
+      
         <button type="submit" name="registrar" class="button-secondary pure-button">Registrar Movimiento</button>
     </fieldset>
   </form>
