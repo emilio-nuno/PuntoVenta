@@ -30,12 +30,6 @@ $stmtRegistroDevolucion->bind_param("iss", $folio_venta, $fecha, $rfc);
 $stmtRegistroDetalle = $enlace->prepare("INSERT INTO detalle_devolucion(folio_devolucion, clave_producto, cantidad, motivo) VALUES(?, ?, ?, ?)");
 $stmtRegistroDetalle->bind_param("iiis", $folio_devolucion, $clave, $cantidadDevolver, $motivo);
   
-$stmtActualizarStock = $enlace->prepare("UPDATE producto SET cantidad = ? WHERE clave_producto = ?");
-$stmtActualizarStock->bind_param("ii", $cantidadGenerada, $clave);
-  
-$stmtVerificarCantidad = $enlace->prepare("SELECT cantidad FROM producto where clave_producto = ?");
-$stmtVerificarCantidad->bind_param("i", $clave);
-  
 $stmtRegistroDevolucion->execute();
 
 $stmtVerificarValor = $enlace->prepare("SELECT precio FROM producto WHERE clave_producto = ?");
@@ -51,19 +45,10 @@ $clave = $id;
 $cantidadDevolver = $_SESSION["devolucion"][$id]["cantidad"];
 $motivo = $_SESSION["devolucion"][$id]["motivo"];
     
-$stmtVerificarCantidad->execute();
-$resultado = $stmtVerificarCantidad->get_result();
-$row = $resultado->fetch_assoc();
-$cantidadGenerada = $row["cantidad"];
-$cantidadGenerada += $cantidadDevolver;
-    
-$stmtActualizarStock->execute();
 $stmtRegistroDetalle->execute();
 }
 
 $stmtRegistroDevolucion->close();
-$stmtActualizarStock->close();
-$stmtVerificarCantidad->close();
 $stmtRegistroDetalle->close();
 
 $_SESSION["dinero_caja"] -= $montoDevolucion;
