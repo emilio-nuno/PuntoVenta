@@ -59,7 +59,7 @@ if(isset($_POST["buscar"])){
   $stmtProductosDevolucion->bind_param("i", $tuplaMovimiento["folio_generador"]);
   
   $stmtProductosMovimiento = $enlace->prepare("SELECT clave_producto, cantidad FROM detalle_movimiento WHERE folio_movimiento = ?");
-  $stmtProductosMovimiento->bind_param("i", $tuplaMovimiento["folio_generador"]);
+  $stmtProductosMovimiento->bind_param("i", $_POST["folio"]);
   
   $rfc_emp = $tuplaMovimiento["id_empleado"];
   
@@ -192,7 +192,7 @@ if(isset($_POST["buscar"])){
   } } else{
     $stmtProductosMovimiento->execute();
     $resultadoProductos = $stmtProductosMovimiento->get_result();
-  } 
+  }
   ?>
   <table class="pure-table">
     <thead>
