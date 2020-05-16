@@ -30,7 +30,7 @@
         exit();
     }
 
-    if($cantidadProducto > $row["cantidad"]){
+    if($cantidadProducto +  $_SESSION["orden"][$idProducto]["cantidad"] > $row["cantidad"]){
         echo "No hay existencias suficientes para cubrir esa orden";
         exit();
     }
