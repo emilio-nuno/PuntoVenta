@@ -40,11 +40,11 @@
             unset($_SESSION["orden"][$idProducto]);
         }
         else{
-            $_SESSION["orden"][$idProducto]["cantidad"] = $cantidadProducto; 
+            $_SESSION["orden"][$idProducto]["cantidad"] += $cantidadProducto; 
             $_SESSION["orden"][$idProducto]["precio"] = $row["precio"];
             $_SESSION["orden"][$idProducto]["nombre"] = $row["nombre"];
             $_SESSION["orden"][$idProducto]["descripcion"] = $row["descripcion"];
-            $_SESSION["orden"][$idProducto]["importe"] = $row["precio"] * $cantidadProducto;
+            $_SESSION["orden"][$idProducto]["importe"] = $row["precio"] * $_SESSION["orden"][$idProducto]["cantidad"];
         }
     }
     else{
