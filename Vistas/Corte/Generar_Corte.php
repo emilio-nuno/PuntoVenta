@@ -43,6 +43,7 @@ $totalFlujos = 0;
     <title>Corte de Caja</title>
   </head>
   <body>
+    <a href="../../Pantallas/Gerente.php">Regresar</a>
     <h1>Corte de Caja</h1>
     <h2>Bienvenido al corte de caja! Puede consultar la información del día a continuación:</h2>
   </body>
