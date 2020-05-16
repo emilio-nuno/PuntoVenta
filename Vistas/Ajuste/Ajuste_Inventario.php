@@ -82,8 +82,9 @@ if(isset($_POST["ajustar"])){
   else{
     
     $cantidadDisponible = $result->fetch_assoc()["cantidad"];
+    $cantidadActualCarrito = isset($_SESSION["ajuste"][$clave]["cantidad"]) ? $_SESSION["ajuste"][$clave]["cantidad"] : 0;  
     
-    if($cantidadDisponible >= $_SESSION["ajuste"][$clave]["cantidad"] + $cantidad){
+    if($cantidadDisponible >= $cantidadActualCarrito + $cantidad){
       
       $consultarDatos = "SELECT * FROM producto where clave_producto = '$clave'";
       $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
@@ -92,7 +93,7 @@ if(isset($_POST["ajustar"])){
 
       $_SESSION["ajuste"][$clave]["descripcion"] = $row["descripcion"];
       $_SESSION["ajuste"][$clave]["nombre"] = $row["nombre"];
-      $_SESSION["ajuste"][$clave]["cantidad"] += $cantidad;
+      $_SESSION["ajuste"][$clave]["cantidad"] = isset($_SESSION["ajuste"][$clave]["cantidad"]) ? $_SESSION["ajuste"][$clave]["cantidad"] + $cantidad: $cantidad;
       $_SESSION["ajuste"][$clave]["motivo"] = $motivo;?>
   
       <table class="pure-table">
