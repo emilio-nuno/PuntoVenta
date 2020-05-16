@@ -164,7 +164,9 @@ if(isset($_POST["devolver"])){
       }
     }
     
-    if($cantidadComprada < $_POST["cantidad"] or $_POST["cantidad"] > ($cantidadComprada - $cantidadDevuelta)){
+    $cantidadActualCarrito = isset($_SESSION["devolucion"][$clave]["cantidad"]) ? $_SESSION["devolucion"][$clave]["cantidad"] : 0;
+    
+    if($cantidadComprada < $_POST["cantidad"] + $cantidadActualCarrito or $cantidadActualCarrito + $_POST["cantidad"] > ($cantidadComprada - $cantidadDevuelta)){
       echo "Estás intentando regresar más productos de los que compraste";
     }
     else{
@@ -172,7 +174,7 @@ if(isset($_POST["devolver"])){
       $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
       $row = mysqli_fetch_array($ejecutarConsultar);
       
-      $_SESSION["devolucion"][$clave]["cantidad"] = $_POST["cantidad"];
+      $_SESSION["devolucion"][$clave]["cantidad"] = isset( $_SESSION["devolucion"][$clave]["cantidad"]) ? $_SESSION["devolucion"][$clave]["cantidad"] + $_POST["cantidad"]: $_POST["cantidad"];
       $_SESSION["devolucion"][$clave]["motivo"] = $_POST["motivo"];
       $_SESSION["devolucion"][$clave]["descripcion"] = $row["descripcion"];
       $_SESSION["devolucion"][$clave]["nombre"] = $row["nombre"];
