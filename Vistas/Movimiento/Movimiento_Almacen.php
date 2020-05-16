@@ -66,7 +66,7 @@ if(isset($_POST["confirmar"])){ //este es para operaciones de proveedor
     $motivo = $_SESSION["movimiento"]["motivo"];
     $folio_gen = $_POST["folio"];
   
-    //buscarn folio dado en base de datos y si existe, no insertar nada y mostrar mensaje de error si no continuar normalmente
+    //buscar folio dado en base de datos y si existe, no insertar nada y mostrar mensaje de error si no continuar normalmente
     $stmtBuscarFolioGen->execute();
     $resultadoBuscar = $stmtBuscarFolioGen->get_result();
   
@@ -133,7 +133,7 @@ function selectElement(id, valueToSelect){
   
   if($_POST["motivo"] == "compra_cliente" || $_POST["motivo"] == "devolucion_cliente"){
   if($_POST["motivo"] == "compra_cliente"){
-    $stmtFoliosVenta = $enlace->prepare("SELECT folio_venta as folio, fecha_venta as fecha FROM venta WHERE folio_venta NOT IN(SELECT folio_generador FROM movimiento_almacen WHERE motivo = 'compra_cliente') ORDER BY folio ASC");
+    $stmtFoliosVenta = $enlace->prepare("SELECT folio_venta as folio, fecha_venta as fecha FROM venta WHERE status = 0 ORDER BY folio ASC");
     $stmtFoliosVenta->execute();
     $resultadoFolio = $stmtFoliosVenta->get_result();
     ?>
@@ -141,7 +141,7 @@ function selectElement(id, valueToSelect){
 <?php
   }
   else{
-    $stmtFoliosDevolucion = $enlace->prepare("SELECT folio_devolucion as folio, fecha FROM devolucion WHERE folio_devolucion NOT IN(SELECT folio_generador FROM movimiento_almacen WHERE motivo = 'devolucion_cliente') ORDER BY folio ASC");
+    $stmtFoliosDevolucion = $enlace->prepare("SELECT folio_devolucion as folio, fecha FROM devolucion WHERE status = 0 ORDER BY folio ASC");
     $stmtFoliosDevolucion->execute();
     $resultadoFolio = $stmtFoliosDevolucion->get_result(); 
   }?>
@@ -208,39 +208,42 @@ function selectElement(id, valueToSelect){
     $stmtConseguirProductosVenta = $enlace->prepare("SELECT clave_producto, cantidad FROM detalle_venta WHERE folio_venta = ?");
     $stmtConseguirProductosVenta->bind_param("i", $folio_gen);
     
+    $stmtActualizarStatusVenta = $enlace->prepare("UPDATE venta SET status = 1 WHERE folio_venta = ?");
+    $stmtActualizarStatusVenta->bind_param("i", $folio_gen);
+    
+    $stmtActualizarStatusDevolucion = $enlace->prepare("UPDATE devolucion SET status = 1 WHERE folio_devolucion = ?");
+    $stmtActualizarStatusDevolucion->bind_param("i", $folio_gen);
+    
     $fecha = $_SESSION["movimiento"]["fecha"];
     $tipo = $_SESSION["movimiento"]["tipo"];
     $motivo = $_SESSION["movimiento"]["motivo"];
     $folio_gen = $_POST["folio"];
-    
-    //buscarn folio dado en base de datos y si existe, no insertar nada y mostrar mensaje de error si no continuar normalmente
-    $stmtBuscarFolioGen->execute();
-    $resultadoBuscar = $stmtBuscarFolioGen->get_result();
-  
-    if($resultadoBuscar->num_rows == 0){
-      $stmtInsertarMovimiento = $enlace->prepare("INSERT INTO movimiento_almacen ( fecha ,  tipo ,  id_empleado ,  motivo ,  folio_generador ) VALUES ( ? , ? , ? , ?, ? )");
-      $stmtInsertarMovimiento->bind_param("ssssi", $fecha, $tipo, $rfc, $motivo, $folio_gen);
-      $stmtInsertarMovimiento->execute();
+
+    $stmtInsertarMovimiento = $enlace->prepare("INSERT INTO movimiento_almacen ( fecha ,  tipo ,  id_empleado ,  motivo ,  folio_generador ) VALUES ( ? , ? , ? , ?, ? )");
+    $stmtInsertarMovimiento->bind_param("ssssi", $fecha, $tipo, $rfc, $motivo, $folio_gen);
+    $stmtInsertarMovimiento->execute();
       
       
-      if($motivo == "compra_cliente"){
-        $stmtConseguirProductosVenta->execute();
-        $resultadoConsulta = $stmtConseguirProductosVenta->get_result();
-        while($tuplaProducto = $resultadoConsulta->fetch_assoc()){
-          $id = $tuplaProducto["clave_producto"];
-          $cantidad = $tuplaProducto["cantidad"];
-          $stmtDisminuirCantidadStock->execute();
-        }
+    if($motivo == "compra_cliente"){
+      $stmtActualizarStatusVenta->execute();
+      $stmtConseguirProductosVenta->execute();
+      $resultadoConsulta = $stmtConseguirProductosVenta->get_result();
+      while($tuplaProducto = $resultadoConsulta->fetch_assoc()){
+        $id = $tuplaProducto["clave_producto"];
+        $cantidad = $tuplaProducto["cantidad"];
+        $stmtDisminuirCantidadStock->execute();
       }
-      else{
-        $stmtConseguirProductosDevolucion->execute();
-        $resultadoConsulta = $stmtConseguirProductosDevolucion->get_result();
-        while($tuplaProducto = $resultadoConsulta->fetch_assoc()){
-          $id = $tuplaProducto["clave_producto"];
-          $cantidad = $tuplaProducto["cantidad"];
-          $stmtAumentarCantidadStock->execute();
-        }
+    }
+    else{
+      $stmtActualizarStatusDevolucion->execute();
+      $stmtConseguirProductosDevolucion->execute();
+      $resultadoConsulta = $stmtConseguirProductosDevolucion->get_result();
+      while($tuplaProducto = $resultadoConsulta->fetch_assoc()){
+        $id = $tuplaProducto["clave_producto"];
+        $cantidad = $tuplaProducto["cantidad"];
+        $stmtAumentarCantidadStock->execute();
       }
+    }
     
       unset($_SESSION["movimiento"]);
     
@@ -250,9 +253,5 @@ function selectElement(id, valueToSelect){
       else{
         echo "Registro creado con éxito!";
       } 
-    }
-    else{
-      echo "Ya existe un movimiento relacionado a ese folio generador";
-    }
-  }
+}
 ?>
