@@ -71,48 +71,58 @@ if(isset($_POST["ajustar"])){
   $cantidad = $_POST["cantidad"];
   $motivo = $_POST["motivo"];
   
-  $stmtVerificarProducto = $enlace->prepare("SELECT * FROM producto WHERE clave_producto = ?");
+  $stmtVerificarProducto = $enlace->prepare("SELECT * FROM producto WHERE clave_producto = ?"); //tenemos dos consultas redundantes
   $stmtVerificarProducto->bind_param("i", $clave);
   $stmtVerificarProducto->execute();
   $result = $stmtVerificarProducto->get_result();
+  
   if($result->num_rows === 0){
     echo "El producto no existe en la base de datos";
   }
   else{
-    $consultarDatos = "SELECT * FROM producto where clave_producto = '$clave'";
-    $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
-    $row = mysqli_fetch_array($ejecutarConsultar);
+    
+    $cantidadDisponible = $result->fetch_assoc()["cantidad"];
+    
+    if($cantidadDisponible >= $_SESSION["ajuste"][$clave]["cantidad"] + $cantidad){
+      
+      $consultarDatos = "SELECT * FROM producto where clave_producto = '$clave'";
+      $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
+      $row = mysqli_fetch_array($ejecutarConsultar);
       
 
-    $_SESSION["ajuste"][$clave]["descripcion"] = $row["descripcion"];
-    $_SESSION["ajuste"][$clave]["nombre"] = $row["nombre"];
-    $_SESSION["ajuste"][$clave]["cantidad"] += $cantidad;
-    $_SESSION["ajuste"][$clave]["motivo"] = $motivo;?>
+      $_SESSION["ajuste"][$clave]["descripcion"] = $row["descripcion"];
+      $_SESSION["ajuste"][$clave]["nombre"] = $row["nombre"];
+      $_SESSION["ajuste"][$clave]["cantidad"] += $cantidad;
+      $_SESSION["ajuste"][$clave]["motivo"] = $motivo;?>
   
-    <table class="pure-table">
-        <thead>
-          <br><legend>Productos listos para ajuste</legend><br>
-          <tr>
-            <th>Clave de Producto</th>
-            <th>Nombre</th>
-            <th>Descripción</th>
-            <th>Cantidad</th>
-            <th>Motivo</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach($_SESSION["ajuste"] as $id=>$valor){ ?>
+      <table class="pure-table">
+          <thead>
+            <br><legend>Productos listos para ajuste</legend><br>
             <tr>
-              <td><?=$id?></td>
-              <td><?=$_SESSION["ajuste"][$id]["nombre"]?></td>
-              <td><?=$_SESSION["ajuste"][$id]["descripcion"]?></td>
-              <td><?=$_SESSION["ajuste"][$id]["cantidad"]?></td>
-              <td><?=$_SESSION["ajuste"][$id]["motivo"]?></td>
+              <th>Clave de Producto</th>
+              <th>Nombre</th>
+              <th>Descripción</th>
+              <th>Cantidad</th>
+              <th>Motivo</th>
             </tr>
-          <?php } ?>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            <?php foreach($_SESSION["ajuste"] as $id=>$valor){ ?>
+              <tr>
+                <td><?=$id?></td>
+                <td><?=$_SESSION["ajuste"][$id]["nombre"]?></td>
+                <td><?=$_SESSION["ajuste"][$id]["descripcion"]?></td>
+                <td><?=$_SESSION["ajuste"][$id]["cantidad"]?></td>
+                <td><?=$_SESSION["ajuste"][$id]["motivo"]?></td>
+              </tr>
+            <?php } ?>
+          </tbody>
+        </table>
 <?php
+      }
+      else{
+        echo "No se puede agregar esa cantidad porque excede el stock disponible";
+      }
   }
   $stmtVerificarProducto->close();
 }
