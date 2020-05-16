@@ -1,5 +1,9 @@
 <?php
 session_start();
+/*TODO: 
+*Volver a pantalla de gerente al terminar ajuste
+*Averiguar por que se registra al refrescar
+*/
 
 $servidor="localhost";
 $usuario="root";
@@ -49,7 +53,7 @@ $tuplaNombreEmpleado = $stmtNombreEmpleado->get_result()->fetch_assoc();
     <fieldset>
 
         <input type="text" placeholder="Clave del Producto" name="clave" id="clave" onchange="MostrarDescripcion('#clave', '#descProducto');" required>
-        <input type="number" placeholder="Cantidad" min="1" step="1" name="cantidad" required>
+        <input type="number" placeholder="Cantidad" step="1" name="cantidad" required>
         <input type="text" placeholder="Motivo" name="motivo" required>
 
         <button type="submit" class="pure-button pure-button-primary" name="ajustar">Agregar a Ajuste</button>
@@ -137,11 +141,8 @@ if(isset($_POST["confirmar"])){
   $stmtInsertarDetalle = $enlace->prepare("INSERT INTO detalle_ajuste ( folio_ajuste ,  clave_producto ,  cantidad ,  motivo ) VALUES ( ? , ? , ? , ?)");
   $stmtInsertarDetalle->bind_param("iiis", $folioAjuste, $claveProducto, $cantidadProducto, $motivoProducto);
   
-  $stmtVerificarCantidadProducto = $enlace->prepare("SELECT cantidad FROM producto WHERE clave_producto = ?");
-  $stmtVerificarCantidadProducto->bind_param("i", $claveProducto);
-  
-  $stmtActualizarCantidadProducto = $enlace->prepare("UPDATE producto SET cantidad = ? WHERE clave_producto = ?");
-  $stmtActualizarCantidadProducto->bind_param("ii", $cantidadGenerada, $claveProducto);
+  $stmtActualizarCantidadProducto = $enlace->prepare("UPDATE producto SET cantidad =  cantidad + ? WHERE clave_producto = ?");
+  $stmtActualizarCantidadProducto->bind_param("ii", $cantidadProducto, $claveProducto);
   
   $stmtInsertarAjuste->execute();
 
@@ -150,22 +151,20 @@ if(isset($_POST["confirmar"])){
     $cantidadProducto = $_SESSION["ajuste"][$id]["cantidad"];
     $motivoProducto = $_SESSION["ajuste"][$id]["motivo"];
     
-    $stmtVerificarCantidadProducto->execute();
-    $resultado = $stmtVerificarCantidadProducto->get_result();
-    $tuplaCantidad = $resultado->fetch_assoc();
-    $cantidadGenerada = $tuplaCantidad["cantidad"] - $cantidadProducto;
-    
     $stmtActualizarCantidadProducto->execute();
     
     $stmtInsertarDetalle->execute();
   }
   $stmtInsertarAjuste->close();
   $stmtInsertarDetalle->close();
-  $stmtVerificarCantidadProducto->close();
   $stmtActualizarCantidadProducto->close();
   $stmtFolioAjuste->close();
   
   echo "SE HA REGISTRADO EL AJUSTE DE MANERA EXITOSA";
-  exit();
+  
+  unset($_SESSION["ajuste"]);
+  
+  header("Location: ../../Pantallas/Gerente.php");
+  exit;
 }
 ?>
