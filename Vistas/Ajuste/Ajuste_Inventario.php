@@ -86,7 +86,7 @@ if(isset($_POST["ajustar"])){
 
     $_SESSION["ajuste"][$clave]["descripcion"] = $row["descripcion"];
     $_SESSION["ajuste"][$clave]["nombre"] = $row["nombre"];
-    $_SESSION["ajuste"][$clave]["cantidad"] = $cantidad;
+    $_SESSION["ajuste"][$clave]["cantidad"] += $cantidad;
     $_SESSION["ajuste"][$clave]["motivo"] = $motivo;?>
   
     <table class="pure-table">
