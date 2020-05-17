@@ -1,5 +1,10 @@
 <?php
 session_start();
+require("PDF/tables.php");
+
+$pdf = new PDF();
+$pdf->AddPage();
+$pdf->SetFont('Arial','',14);
 
 $servidor="localhost";
 $usuario="root";
@@ -35,155 +40,105 @@ $totalVentasCredito = 0;
 $totalDevoluciones = 0;
 $totalFlujos = 0;
 ?>
-
-<DOCTYPE !html>
-<html>
-  <head>
-    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css" integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
-    <title>Corte de Caja</title>
-  </head>
-  <body>
-    <a href="../../Pantallas/Gerente.php">Regresar</a>
-    <h1>Corte de Caja</h1>
-    <h2>Bienvenido al corte de caja! Puede consultar la información del día a continuación:</h2>
-  </body>
-</html>
-  
-<table class="pure-table">
-    <thead>
-      <legend>Ventas</legend><br>
-        <tr>
-            <th>Folio</th>
-            <th>Monto de Venta</th>
-            <th>Método de Pago</th>
-        </tr>
-    </thead>
-
-    <tbody>
-      <?php while($tuplaFolio = $resultadoFolios->fetch_assoc()){ 
-              $folioVenta = $tuplaFolio["folio_venta"];
-              $stmtConsultarTotalVenta->execute();
-              $resultadoTotal = $stmtConsultarTotalVenta->get_result();
-              $tuplaVenta = $resultadoTotal->fetch_assoc();
-              if($tuplaFolio["metodo_pago"] == "efectivo"){
-                $totalVentasEfectivo += $tuplaVenta["monto_venta"]; 
-              }
-              else{
-                $totalVentasCredito += $tuplaVenta["monto_venta"]; 
-              }
-      ?>
-      <tr>
-        <td><?=$tuplaVenta["folio_venta"]?></td>
-        <td><?=$tuplaVenta["monto_venta"]?></td>
-        <td><?=ucfirst($tuplaFolio["metodo_pago"])?></td>
-      </tr>
-      <?php } ?>
-    </tbody>
-  
-    <tfoot>
-      <tr>
-        <th>Total de Ventas en efectivo</th>
-        <td><?=$totalVentasEfectivo?></td>
-      </tr>
-      <tr>
-        <th>Total de Ventas en crédito</th>
-        <td><?=$totalVentasCredito?></td>
-      </tr>
-    </tfoot>
-</table>
   
 <?php
-$stmtConsultarTotalVenta->close();
+  //IMPPRIMIR TOTAL DE VENTAS
 
-$stmtFoliosDevolucion = $enlace->prepare("CREATE TEMPORARY TABLE devoluciones_dia SELECT folio_devolucion, clave_producto as clave, cantidad, cantidad * (SELECT precio FROM producto WHERE clave_producto = clave) as monto_total FROM detalle_devolucion WHERE folio_devolucion IN(SELECT folio_devolucion FROM devolucion WHERE DATEDIFF(fecha, ?) = 0 )");
-$stmtFoliosDevolucion->bind_param("s", $fecha);
-$stmtFoliosDevolucion->execute();
-$stmtFoliosDevolucion->close(); //creamos la tabla
+  $header = array("Folio", "Monto de Venta", "Metodo de Pago");
+  $data = [];
   
-$stmtConseguirFolios = $enlace->prepare("SELECT folio_devolucion FROM devolucion WHERE DATEDIFF(fecha, ?) = 0");
-$stmtConseguirFolios->bind_param("s", $fecha);
-$stmtConseguirFolios->execute();
-$foliosDevolucion = $stmtConseguirFolios->get_result();
-$stmtConseguirFolios->close();
-
-$stmtTotalFolio = $enlace->prepare("SELECT folio_devolucion, SUM(monto_total) as monto_devolucion FROM devoluciones_dia WHERE folio_devolucion = ?");
-$stmtTotalFolio->bind_param("i", $folioDevolucion);
-?>
-  
-<table class="pure-table">
-    <thead>
-      <br><legend>Devoluciones</legend><br>
-        <tr>
-            <th>Folio</th>
-            <th>Monto Devolución</th>
-        </tr>
-    </thead>
-
-    <tbody>
-      <?php while($tuplaFolio = $foliosDevolucion->fetch_assoc()){ 
-              $folioDevolucion = $tuplaFolio["folio_devolucion"];
-              $stmtTotalFolio->execute();
-              $resultadoTotal = $stmtTotalFolio->get_result();
-              $tuplaDevolucion = $resultadoTotal->fetch_assoc();
-              $totalDevoluciones += $tuplaDevolucion["monto_devolucion"];
-      ?>
-      <tr>
-        <td><?=$tuplaDevolucion["folio_devolucion"]?></td>
-        <td><?=$tuplaDevolucion["monto_devolucion"]?></td>
-      </tr>
-      <?php } ?>
-    </tbody>
-  
-    <tfoot>
-      <th>Total</th>
-      <td><?=$totalDevoluciones?></td>
-    </tfoot>
-</table>
-  
-<?php
-$stmtTotalFolio->close();
-
-$stmtConseguirFlujos = $enlace->prepare("SELECT folio_flujo, monto, hora FROM flujo_efectivo WHERE DATEDIFF(fecha, ?) = 0 ");
-$stmtConseguirFlujos->bind_param("s", $fecha);
-$stmtConseguirFlujos->execute();
+  while($tuplaFolio = $resultadoFolios->fetch_assoc()){ 
+      $folioVenta = $tuplaFolio["folio_venta"];
+      $stmtConsultarTotalVenta->execute();
+      $resultadoTotal = $stmtConsultarTotalVenta->get_result();
+      $tuplaVenta = $resultadoTotal->fetch_assoc();
+      if($tuplaFolio["metodo_pago"] == "efectivo"){
+          $totalVentasEfectivo += $tuplaVenta["monto_venta"]; 
+      }
+      else{
+          $totalVentasCredito += $tuplaVenta["monto_venta"]; 
+      }
     
-$foliosFlujo = $stmtConseguirFlujos->get_result(); //para flujos es una simple consulta
-        
-$stmtConseguirFlujos->close();
-?>
+      $data[] = [$tuplaVenta["folio_venta"], $tuplaVenta["monto_venta"], ucfirst($tuplaFolio["metodo_pago"])];
+  }
   
-<table class="pure-table">
-    <thead>
-      <br><legend>Flujo Efectivo</legend><br>
-        <tr>
-            <th>Folio</th>
-            <th>Monto</th>
-            <th>Hora</th>
-        </tr>
-    </thead>
+  $data[] = ["Total Efectivo", $totalVentasEfectivo];
+  $data[] = ["Total Credito", $totalVentasCredito];
+  
+  $pdf->BasicTable($header,$data);
+  $pdf->Ln();
 
-    <tbody>
-      <?php while($tuplaFolio = $foliosFlujo->fetch_assoc()){ 
-              $totalFlujos += $tuplaFolio["monto"];
-      ?>
-      <tr>
-        <td><?=$tuplaFolio["folio_flujo"]?></td>
-        <td><?=$tuplaFolio["monto"]?></td>
-        <td><?=$tuplaFolio["hora"]?></td>
-      </tr>
-      <?php } ?>
-    </tbody>
-  
-    <tfoot>
-      <th>Total</th>
-      <td><?=$totalFlujos?></td>
-    </tfoot>
-</table>
+  unset($data);
 
-<p><strong>TOTAL VOUCHERS: <?=$totalVentasCredito?></strong></p>
-<p><strong>TOTAL EFECTIVO: <?=$totalVentasEfectivo - $totalDevoluciones - $totalFlujos?></strong></p>
+  $stmtConsultarTotalVenta->close();
+
+  $stmtFoliosDevolucion = $enlace->prepare("CREATE TEMPORARY TABLE devoluciones_dia SELECT folio_devolucion, clave_producto as clave, cantidad, cantidad * (SELECT precio FROM producto WHERE clave_producto = clave) as monto_total FROM detalle_devolucion WHERE folio_devolucion IN(SELECT folio_devolucion FROM devolucion WHERE DATEDIFF(fecha, ?) = 0 )");
+  $stmtFoliosDevolucion->bind_param("s", $fecha);
+  $stmtFoliosDevolucion->execute();
+  $stmtFoliosDevolucion->close(); //creamos la tabla
   
-<?php
+  $stmtConseguirFolios = $enlace->prepare("SELECT folio_devolucion FROM devolucion WHERE DATEDIFF(fecha, ?) = 0");
+  $stmtConseguirFolios->bind_param("s", $fecha);
+  $stmtConseguirFolios->execute();
+  $foliosDevolucion = $stmtConseguirFolios->get_result();
+  $stmtConseguirFolios->close();
+
+  $stmtTotalFolio = $enlace->prepare("SELECT folio_devolucion, SUM(monto_total) as monto_devolucion FROM devoluciones_dia WHERE folio_devolucion = ?");
+  $stmtTotalFolio->bind_param("i", $folioDevolucion);
+
+  //IMPRIMIR TOTAL DEVOLUCIONES
+
+  $header = array("Folio", "Monto Devolucion");
+  $data = [];
+
+  while($tuplaFolio = $foliosDevolucion->fetch_assoc()){ 
+      $folioDevolucion = $tuplaFolio["folio_devolucion"];
+      $stmtTotalFolio->execute();
+      $resultadoTotal = $stmtTotalFolio->get_result();
+      $tuplaDevolucion = $resultadoTotal->fetch_assoc();
+      $totalDevoluciones += $tuplaDevolucion["monto_devolucion"];
+    
+      $data[] = [$tuplaDevolucion["folio_devolucion"], $tuplaDevolucion["monto_devolucion"]];
+  }  
+
+  $data[] = ["Total", $totalDevoluciones];
+
+  $pdf->BasicTable($header,$data);
+  $pdf->Ln();
+
+  unset($data);
+
+  $stmtTotalFolio->close();
+  $stmtConseguirFlujos = $enlace->prepare("SELECT folio_flujo, monto, hora FROM flujo_efectivo WHERE DATEDIFF(fecha, ?) = 0 ");
+  $stmtConseguirFlujos->bind_param("s", $fecha);
+  $stmtConseguirFlujos->execute();
+  $foliosFlujo = $stmtConseguirFlujos->get_result(); //para flujos es una simple consulta
+  $stmtConseguirFlujos->close();
+
+  //IMPRIMIR TOTAL FLUJOS
+  $header = array("Folio", "Monto", "Hora");
+  $data = [];
+
+  while($tuplaFolio = $foliosFlujo->fetch_assoc()){ 
+      $totalFlujos += $tuplaFolio["monto"];
+      $data[] = [$tuplaFolio["folio_flujo"], $tuplaFolio["monto"], $tuplaFolio["hora"]];
+  }
+
+  $data[] = ["Total", $totalFlujos];
+
+  $pdf->BasicTable($header,$data);
+  $pdf->Ln();
+
+  unset($data);
+
+  $data = [];
+
+  $header = array("Total Vouchers", "Total Efectivo");
+  $data[] = [$totalVentasCredito, $totalVentasEfectivo - $totalDevoluciones - $totalFlujos];
+
+  $pdf->BasicTable($header,$data);
+  $pdf->Ln();
+
   $rfc_emp = "1234567890121"; //cambiar estos a valores dados por $_SESSION[]
   $rfc_geren = $_SESSION["empleado"]; //aqui guardamos el valor del rfc actual y solo pueden entrar a esta vista los gerentes
         
@@ -202,9 +157,15 @@ $stmtConseguirFlujos->close();
   }
 
   $stmtConseguirNombreEmpleado->close();
+
+  unset($data);
+
+  $data = [];
+
+  $header = array("Entrega", "Recibe");
+  $data[] = [$nombres[0], $nombres[1]];
+
+  $pdf->BasicTable($header,$data);
+
+  $pdf->Output();
 ?>
-  
-<p style="display: inline-block;
-    vertical-align: top; width: 10%"><?=$nombres[0]?><br>Nombre Empleado<br>Entrega</p>
-<p style="display: inline-block;
-    vertical-align: top;"><?=$nombres[1]?><br>Nombre Gerente<br>Recibe</p>
