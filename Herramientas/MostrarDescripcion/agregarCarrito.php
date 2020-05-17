@@ -30,7 +30,9 @@
         exit();
     }
 
-    if($cantidadProducto > $row["cantidad"]){
+    $cantidadActualCarrito = isset($_SESSION["orden"][$idProducto]["cantidad"]) ?  $_SESSION["orden"][$idProducto]["cantidad"] : 0;
+
+    if($cantidadProducto + $cantidadActualCarrito > $row["cantidad"]){
         echo "No hay existencias suficientes para cubrir esa orden";
         exit();
     }
@@ -40,11 +42,11 @@
             unset($_SESSION["orden"][$idProducto]);
         }
         else{
-            $_SESSION["orden"][$idProducto]["cantidad"] = $cantidadProducto; 
+            $_SESSION["orden"][$idProducto]["cantidad"] += $cantidadProducto; 
             $_SESSION["orden"][$idProducto]["precio"] = $row["precio"];
             $_SESSION["orden"][$idProducto]["nombre"] = $row["nombre"];
             $_SESSION["orden"][$idProducto]["descripcion"] = $row["descripcion"];
-            $_SESSION["orden"][$idProducto]["importe"] = $row["precio"] * $cantidadProducto;
+            $_SESSION["orden"][$idProducto]["importe"] = $row["precio"] * $_SESSION["orden"][$idProducto]["cantidad"];
         }
     }
     else{

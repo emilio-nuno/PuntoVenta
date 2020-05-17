@@ -1,5 +1,9 @@
 <?php
 session_start();
+/*TODO: 
+*Volver a pantalla de gerente al terminar ajuste
+*Averiguar por que se registra al refrescar
+*/
 
 $servidor="localhost";
 $usuario="root";
@@ -49,7 +53,7 @@ $tuplaNombreEmpleado = $stmtNombreEmpleado->get_result()->fetch_assoc();
     <fieldset>
 
         <input type="text" placeholder="Clave del Producto" name="clave" id="clave" onchange="MostrarDescripcion('#clave', '#descProducto');" required>
-        <input type="number" placeholder="Cantidad" min="1" step="1" name="cantidad" required>
+        <input type="number" placeholder="Cantidad" step="1" name="cantidad" required>
         <input type="text" placeholder="Motivo" name="motivo" required>
 
         <button type="submit" class="pure-button pure-button-primary" name="ajustar">Agregar a Ajuste</button>
@@ -71,48 +75,59 @@ if(isset($_POST["ajustar"])){
   $cantidad = $_POST["cantidad"];
   $motivo = $_POST["motivo"];
   
-  $stmtVerificarProducto = $enlace->prepare("SELECT * FROM producto WHERE clave_producto = ?");
+  $stmtVerificarProducto = $enlace->prepare("SELECT * FROM producto WHERE clave_producto = ?"); //tenemos dos consultas redundantes
   $stmtVerificarProducto->bind_param("i", $clave);
   $stmtVerificarProducto->execute();
   $result = $stmtVerificarProducto->get_result();
+  
   if($result->num_rows === 0){
     echo "El producto no existe en la base de datos";
   }
   else{
-    $consultarDatos = "SELECT * FROM producto where clave_producto = '$clave'";
-    $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
-    $row = mysqli_fetch_array($ejecutarConsultar);
+    
+    $cantidadDisponible = $result->fetch_assoc()["cantidad"];
+    $cantidadActualCarrito = isset($_SESSION["ajuste"][$clave]["cantidad"]) ? $_SESSION["ajuste"][$clave]["cantidad"] : 0;  
+    
+    if($cantidadDisponible >= $cantidadActualCarrito + $cantidad){
+      
+      $consultarDatos = "SELECT * FROM producto where clave_producto = '$clave'";
+      $ejecutarConsultar = mysqli_query($enlace, $consultarDatos);
+      $row = mysqli_fetch_array($ejecutarConsultar);
       
 
-    $_SESSION["ajuste"][$clave]["descripcion"] = $row["descripcion"];
-    $_SESSION["ajuste"][$clave]["nombre"] = $row["nombre"];
-    $_SESSION["ajuste"][$clave]["cantidad"] = $cantidad;
-    $_SESSION["ajuste"][$clave]["motivo"] = $motivo;?>
+      $_SESSION["ajuste"][$clave]["descripcion"] = $row["descripcion"];
+      $_SESSION["ajuste"][$clave]["nombre"] = $row["nombre"];
+      $_SESSION["ajuste"][$clave]["cantidad"] = isset($_SESSION["ajuste"][$clave]["cantidad"]) ? $_SESSION["ajuste"][$clave]["cantidad"] + $cantidad: $cantidad;
+      $_SESSION["ajuste"][$clave]["motivo"] = $motivo;?>
   
-    <table class="pure-table">
-        <thead>
-          <br><legend>Productos listos para ajuste</legend><br>
-          <tr>
-            <th>Clave de Producto</th>
-            <th>Nombre</th>
-            <th>Descripción</th>
-            <th>Cantidad</th>
-            <th>Motivo</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach($_SESSION["ajuste"] as $id=>$valor){ ?>
+      <table class="pure-table">
+          <thead>
+            <br><legend>Productos listos para ajuste</legend><br>
             <tr>
-              <td><?=$id?></td>
-              <td><?=$_SESSION["ajuste"][$id]["nombre"]?></td>
-              <td><?=$_SESSION["ajuste"][$id]["descripcion"]?></td>
-              <td><?=$_SESSION["ajuste"][$id]["cantidad"]?></td>
-              <td><?=$_SESSION["ajuste"][$id]["motivo"]?></td>
+              <th>Clave de Producto</th>
+              <th>Nombre</th>
+              <th>Descripción</th>
+              <th>Cantidad</th>
+              <th>Motivo</th>
             </tr>
-          <?php } ?>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            <?php foreach($_SESSION["ajuste"] as $id=>$valor){ ?>
+              <tr>
+                <td><?=$id?></td>
+                <td><?=$_SESSION["ajuste"][$id]["nombre"]?></td>
+                <td><?=$_SESSION["ajuste"][$id]["descripcion"]?></td>
+                <td><?=$_SESSION["ajuste"][$id]["cantidad"]?></td>
+                <td><?=$_SESSION["ajuste"][$id]["motivo"]?></td>
+              </tr>
+            <?php } ?>
+          </tbody>
+        </table>
 <?php
+      }
+      else{
+        echo "No se puede agregar esa cantidad porque excede el stock disponible";
+      }
   }
   $stmtVerificarProducto->close();
 }
@@ -126,11 +141,8 @@ if(isset($_POST["confirmar"])){
   $stmtInsertarDetalle = $enlace->prepare("INSERT INTO detalle_ajuste ( folio_ajuste ,  clave_producto ,  cantidad ,  motivo ) VALUES ( ? , ? , ? , ?)");
   $stmtInsertarDetalle->bind_param("iiis", $folioAjuste, $claveProducto, $cantidadProducto, $motivoProducto);
   
-  $stmtVerificarCantidadProducto = $enlace->prepare("SELECT cantidad FROM producto WHERE clave_producto = ?");
-  $stmtVerificarCantidadProducto->bind_param("i", $claveProducto);
-  
-  $stmtActualizarCantidadProducto = $enlace->prepare("UPDATE producto SET cantidad = ? WHERE clave_producto = ?");
-  $stmtActualizarCantidadProducto->bind_param("ii", $cantidadGenerada, $claveProducto);
+  $stmtActualizarCantidadProducto = $enlace->prepare("UPDATE producto SET cantidad =  cantidad + ? WHERE clave_producto = ?");
+  $stmtActualizarCantidadProducto->bind_param("ii", $cantidadProducto, $claveProducto);
   
   $stmtInsertarAjuste->execute();
 
@@ -139,22 +151,20 @@ if(isset($_POST["confirmar"])){
     $cantidadProducto = $_SESSION["ajuste"][$id]["cantidad"];
     $motivoProducto = $_SESSION["ajuste"][$id]["motivo"];
     
-    $stmtVerificarCantidadProducto->execute();
-    $resultado = $stmtVerificarCantidadProducto->get_result();
-    $tuplaCantidad = $resultado->fetch_assoc();
-    $cantidadGenerada = $tuplaCantidad["cantidad"] - $cantidadProducto;
-    
     $stmtActualizarCantidadProducto->execute();
     
     $stmtInsertarDetalle->execute();
   }
   $stmtInsertarAjuste->close();
   $stmtInsertarDetalle->close();
-  $stmtVerificarCantidadProducto->close();
   $stmtActualizarCantidadProducto->close();
   $stmtFolioAjuste->close();
   
   echo "SE HA REGISTRADO EL AJUSTE DE MANERA EXITOSA";
-  exit();
+  
+  unset($_SESSION["ajuste"]);
+  
+  header("Location: ../../Pantallas/Gerente.php");
+  exit;
 }
 ?>
