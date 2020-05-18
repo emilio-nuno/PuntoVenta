@@ -167,5 +167,5 @@ $totalFlujos = 0;
 
   $pdf->BasicTable($header,$data);
 
-  $pdf->Output();
+  $pdf->Output('F', "corte.pdf");
 ?>
