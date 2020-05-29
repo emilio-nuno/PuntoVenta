@@ -108,7 +108,7 @@
         }
         
         if($metodo != "credito"){
-          $_SESSION["dinero_caja"] += $dineroGenerado; //solo modificamos el valor de efectivo en caja cuando la venta se hace con efectivo 
+          $_SESSION["dinero_caja"] += ($dineroGenerado + ($dineroGenerado * $porcentaje)); //solo modificamos el valor de efectivo en caja cuando la venta se hace con efectivo 
         }
       
         header("Location: Registro_Venta.php");

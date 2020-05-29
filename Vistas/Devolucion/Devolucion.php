@@ -1,8 +1,7 @@
 <?php
  session_start();
 /*TODO:
-*Meter validación de producto sin descuento
-*Meter validacion de no poder generar la devolucion si no existe suficiente dinero en caja
+*Agregar iva de la venta al monto de la devolucion en el total
 */
 
 //Inicializar variables para conexión a BD

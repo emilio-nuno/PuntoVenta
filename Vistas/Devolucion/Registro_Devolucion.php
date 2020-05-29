@@ -20,10 +20,17 @@ if(mysqli_connect_errno()){
 $montoDevolucion = 0;
 
 $folio_venta = $_SESSION["folio_venta"];
+
 $folio_devolucion = $_SESSION["folio_actual"];
 $rfc = $_SESSION["empleado"];
 $fecha = date("Y-m-d");
-  
+
+$stmtIvaVenta = $enlace->prepare("SELECT iva FROM venta WHERE folio_venta = ?");
+$stmtIvaVenta->bind_param("i", $folio_venta);
+
+$stmtIvaVenta->execute();
+$iva = $stmtIvaVenta->get_result()->fetch_assoc()["iva"];
+
 $stmtRegistroDevolucion = $enlace->prepare("INSERT INTO devolucion(folio_venta, fecha, rfc_empleado) values(?, ?, ?)");
 $stmtRegistroDevolucion->bind_param("iss", $folio_venta, $fecha, $rfc);
   
@@ -51,7 +58,7 @@ $stmtRegistroDetalle->execute();
 $stmtRegistroDevolucion->close();
 $stmtRegistroDetalle->close();
 
-$_SESSION["dinero_caja"] -= $montoDevolucion;
+$_SESSION["dinero_caja"] -= ($montoDevolucion + ($montoDevolucion * $iva));
   
 echo "Se ha registrado la devolución de manera exitosa!";
 
