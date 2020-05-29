@@ -77,11 +77,12 @@ if(isset($_POST["confirmar"])){ //este es para operaciones de proveedor
     
       unset($_SESSION["movimiento"]);
   
-      $stmtInsertarDetalle = $enlace->prepare("INSERT INTO  detalle_movimiento ( folio_movimiento ,  clave_producto ,  cantidad ) VALUES (? , ? , ?)");
-      $stmtInsertarDetalle->bind_param("iii", $folioActual, $id, $cantidad);
+      $stmtInsertarDetalle = $enlace->prepare("INSERT INTO  detalle_movimiento ( folio_movimiento ,  clave_producto ,  cantidad , motivo ) VALUES (? , ? , ? , ?)");
+      $stmtInsertarDetalle->bind_param("iiis", $folioActual, $id, $cantidad, $motivo_devolucion);
   
       foreach($_SESSION["orden"] as $id=>$info){
         $cantidad = $_SESSION["orden"][$id]["cantidad"];
+        $motivo_devolucion = $motivo == "devolucion_proveedor" ? $_SESSION["orden"][$id]["motivo"] : null;
       
         if($motivo == "compra_proveedor"){
           $stmtAumentarCantidadStock->execute();
@@ -176,8 +177,12 @@ function selectElement(id, valueToSelect){
 
           <input type="text" placeholder="ID del producto" name="idProducto" id="idProducto" onchange="MostrarDescripcion('#idProducto', '#descProducto');" required>
           <input type="text" placeholder="Cantidad Deseada" name="cantidadProducto" id="cantidadProducto" required>
-
+          <?php if($_POST["motivo"] == "devolucion_proveedor"){ ?>
+          <input type="text" placeholder="Motivo" name="motivoProducto" id="motivoProducto" required>
+          <button type="button" class="pure-button pure-button-primary" onclick="MostrarCarritoMotivo();">Agregar a Carrito</button>
+          <?php }else{ ?>
           <button type="button" class="pure-button pure-button-primary" onclick="MostrarCarrito();">Agregar a Carrito</button>
+          <?php } ?>
       
           <div id="descProducto">
           </div>

@@ -22,7 +22,20 @@ function MostrarInfoFolio(motivo, elementoClave, contenedorResultado){
 function MostrarCarrito() {
     var idProducto = $("#idProducto").val();
     var cantidadProducto = $("#cantidadProducto").val();
+  
     $.post("../../Herramientas/MostrarDescripcion/agregarCarrito.php", { idProducto: idProducto, cantidadProducto: cantidadProducto },
+    function(data) {
+    $('#resultados').html(data);
+    $('#miFormulario')[0].reset();
+    });
+}
+
+function MostrarCarritoMotivo() {
+    var idProducto = $("#idProducto").val();
+    var cantidadProducto = $("#cantidadProducto").val();
+    var motivoProducto = $("#motivoProducto").val();
+  
+    $.post("../../Herramientas/MostrarDescripcion/agregarCarritoDevolucion.php", { idProducto: idProducto, cantidadProducto: cantidadProducto, motivoProducto: motivoProducto },
     function(data) {
     $('#resultados').html(data);
     $('#miFormulario')[0].reset();
