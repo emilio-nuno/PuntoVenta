@@ -2,6 +2,14 @@
 session_start();
 require("PDF/tables.php");
 
+function agregarTitulo($titulo, $pdf){
+  $header = [$titulo];
+  $data = [];
+  
+  $pdf->BasicTable($header,$data);
+  $pdf->Ln();
+}
+
 $pdf = new PDF();
 $pdf->AddPage();
 $pdf->SetFont('Arial','',14);
@@ -16,8 +24,8 @@ if(mysqli_connect_errno()){
   echo "Conexión a la base de datos fallida";
 }
 
-$fecha = date("Y-m-d");
-//$fecha = "2020-04-23"; //solo para probar, reemplazar por fecha actual
+//$fecha = date("Y-m-d");
+$fecha = "2020-04-23"; //solo para probar, reemplazar por fecha actual
 
 $stmtConseguirInfoVentas = $enlace->prepare("CREATE TEMPORARY TABLE desglose_dia SELECT folio_venta, clave_producto, cantidad, valor_unitario, valor_unitario * cantidad as total FROM detalle_venta WHERE folio_venta IN (SELECT folio_venta FROM venta WHERE DATEDIFF(fecha_venta, ?) = 0)");
 $stmtConseguirInfoVentas->bind_param("s", $fecha);
@@ -43,6 +51,7 @@ $totalFlujos = 0;
   
 <?php
   //IMPPRIMIR TOTAL DE VENTAS
+  agregarTitulo("Ventas", $pdf);
 
   $header = array("Folio", "Monto de Venta", "Metodo de Pago");
   $data = [];
@@ -87,6 +96,7 @@ $totalFlujos = 0;
   $stmtTotalFolio->bind_param("i", $folioDevolucion);
 
   //IMPRIMIR TOTAL DEVOLUCIONES
+  agregarTitulo("Devoluciones", $pdf);
 
   $header = array("Folio", "Monto Devolucion");
   $data = [];
@@ -116,6 +126,8 @@ $totalFlujos = 0;
   $stmtConseguirFlujos->close();
 
   //IMPRIMIR TOTAL FLUJOS
+  agregarTitulo("Flujos de Efectivo", $pdf);
+  
   $header = array("Folio", "Monto", "Hora");
   $data = [];
 
@@ -143,8 +155,8 @@ $totalFlujos = 0;
 
   $data = [];
 
-  $header = array("Total Vouchers", "Total Efectivo");
-  $data[] = [$totalVentasCredito, $totalVentasEfectivo - $totalDevoluciones - $totalFlujos];
+  $header = array("Efectivo al Corte", "Vouchers al Corte");
+  $data[] = [$totalVentasEfectivo - $totalDevoluciones - $totalFlujos, $totalVentasCredito];
 
   $pdf->BasicTable($header,$data);
   $pdf->Ln();
