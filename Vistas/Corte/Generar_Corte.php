@@ -132,6 +132,16 @@ $totalFlujos = 0;
   unset($data);
 
   $data = [];
+  
+  $header = array("Fecha del Corte", "Hora del Corte");
+  $data[] = [$fecha, date("H:i")];
+
+  $pdf->BasicTable($header,$data);
+  $pdf->Ln();
+
+  unset($data);
+
+  $data = [];
 
   $header = array("Total Vouchers", "Total Efectivo");
   $data[] = [$totalVentasCredito, $totalVentasEfectivo - $totalDevoluciones - $totalFlujos];
