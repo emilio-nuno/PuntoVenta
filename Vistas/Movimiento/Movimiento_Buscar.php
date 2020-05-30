@@ -58,7 +58,7 @@ if(isset($_POST["buscar"])){
   $stmtProductosDevolucion = $enlace->prepare("SELECT clave_producto, cantidad, motivo FROM detalle_devolucion WHERE folio_devolucion = ?");
   $stmtProductosDevolucion->bind_param("i", $tuplaMovimiento["folio_generador"]);
   
-  $stmtProductosMovimiento = $enlace->prepare("SELECT clave_producto, cantidad FROM detalle_movimiento WHERE folio_movimiento = ?");
+  $stmtProductosMovimiento = $enlace->prepare("SELECT clave_producto, cantidad, motivo FROM detalle_movimiento WHERE folio_movimiento = ?");
   $stmtProductosMovimiento->bind_param("i", $_POST["folio"]);
   
   $rfc_emp = $tuplaMovimiento["id_empleado"];
@@ -202,8 +202,8 @@ if(isset($_POST["buscar"])){
         <th>Nombre</th>
         <th>Descripción</th>
         <th>Cantidad</th>
-        <?= $tuplaMovimiento["motivo"] == "compra_cliente" ? "<th>Valor Unitario</th><th>Importe</th>" : ""?>
-        <?= $tuplaMovimiento["motivo"] == "devolucion_cliente" ? "<th>Motivo</th>" : ""?>
+        <?= $tuplaMovimiento["motivo"] == "compra_cliente" ? "<th>Valor Unitario</th><th>Importe</th>" : "" //tal vez agregar lo mismo para proveedor ?>
+        <?= ($tuplaMovimiento["motivo"] == "devolucion_cliente" or $tuplaMovimiento["motivo"] == "devolucion_proveedor") ? "<th>Motivo</th>" : ""?>
       </tr>
     </thead>
     <tbody>
@@ -218,7 +218,7 @@ if(isset($_POST["buscar"])){
         <td><?=$tuplaProducto["descripcion"]?></td>
         <td><?=$tuplaProductos["cantidad"]?></td>
         <?= $tuplaMovimiento["motivo"] == "compra_cliente" ? "<td>" . $tuplaProductos["valor_unitario"] . "</td>" . "<td>" . $tuplaProductos["cantidad"] * $tuplaProductos["valor_unitario"]. "</td>" : ""?>
-        <?= $tuplaMovimiento["motivo"] == "devolucion_cliente" ? "<td>" . $tuplaProductos["motivo"] . "</td>" : ""?>
+        <?= ($tuplaMovimiento["motivo"] == "devolucion_cliente" or $tuplaMovimiento["motivo"] == "devolucion_proveedor") ? "<td>" . $tuplaProductos["motivo"] . "</td>" : ""?>
       </tr>
       <?php } ?>
     </tbody>
