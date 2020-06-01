@@ -26,7 +26,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     }
     else{
         // Prepare a select statement
-        $sql = "SELECT folio_venta, fecha_venta FROM venta WHERE folio_venta = ?";
+        $sql = "SELECT folio_venta, fecha_venta, metodo_pago FROM venta WHERE folio_venta = ?";
         
         if($stmt = mysqli_prepare($enlace, $sql)){
             // Bind variables to the prepared statement as parameters
@@ -42,11 +42,17 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
                 $row = $resultado->fetch_assoc();
                 
                 if($resultado->num_rows == 1){
+                  if($row["metodo_pago"] == "efectivo"){
                     $folio = trim($_POST["folio"]); //hacer que este sea el éxito
                     $_SESSION["folio_venta"]= $folio;
                     $_SESSION["fecha"] = $row["fecha_venta"];
                     header("Location: Devolucion.php");
                     exit();
+                  }
+                  else{
+                    echo "No se pueden devolver ventas realizadas con crédito";
+                  }
+              
                 } else{
                     echo "El folio de venta no existe en la base de datos.";
                 }
