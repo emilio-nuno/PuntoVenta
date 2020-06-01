@@ -26,16 +26,17 @@ if(mysqli_connect_errno()){
 
 //$fecha = date("Y-m-d");
 $fecha = "2020-04-23"; //solo para probar, reemplazar por fecha actual
+$rfc_emp = "1234567890123"; //rfc del empleado
 
-$stmtConseguirInfoVentas = $enlace->prepare("CREATE TEMPORARY TABLE desglose_dia SELECT folio_venta, clave_producto, cantidad, valor_unitario, valor_unitario * cantidad as total FROM detalle_venta WHERE folio_venta IN (SELECT folio_venta FROM venta WHERE DATEDIFF(fecha_venta, ?) = 0)");
-$stmtConseguirInfoVentas->bind_param("s", $fecha);
+$stmtConseguirInfoVentas = $enlace->prepare("CREATE TEMPORARY TABLE desglose_dia SELECT folio_venta, clave_producto, cantidad, valor_unitario, valor_unitario * cantidad as total FROM detalle_venta WHERE folio_venta IN (SELECT folio_venta FROM venta WHERE (DATEDIFF(fecha_venta, ?) = 0 AND rfc_empleado = ?))");
+$stmtConseguirInfoVentas->bind_param("ss", $fecha, $rfc_emp);
 $stmtConseguirInfoVentas->execute();
 
 $stmtConsultarTotalVenta = $enlace->prepare("SELECT folio_venta, SUM(total) as monto_venta FROM desglose_dia WHERE folio_venta = ?");
 $stmtConsultarTotalVenta->bind_param("i", $folioVenta);
 
-$stmtConseguirFoliosDia = $enlace->prepare("SELECT folio_venta, metodo_pago FROM venta WHERE DATEDIFF(fecha_venta, ?) = 0"); //generamos los folios del día, para iterar sobre ellos
-$stmtConseguirFoliosDia->bind_param("s", $fecha);
+$stmtConseguirFoliosDia = $enlace->prepare("SELECT folio_venta, metodo_pago FROM venta WHERE (DATEDIFF(fecha_venta, ?) = 0 AND rfc_empleado = ?)"); //generamos los folios del día, para iterar sobre ellos
+$stmtConseguirFoliosDia->bind_param("ss", $fecha, $rfc_emp);
 $stmtConseguirFoliosDia->execute();
 
 $resultadoFolios = $stmtConseguirFoliosDia->get_result();
@@ -81,13 +82,13 @@ $totalFlujos = 0;
 
   $stmtConsultarTotalVenta->close();
 
-  $stmtFoliosDevolucion = $enlace->prepare("CREATE TEMPORARY TABLE devoluciones_dia SELECT folio_devolucion, clave_producto as clave, cantidad, cantidad * (SELECT precio FROM producto WHERE clave_producto = clave) as monto_total FROM detalle_devolucion WHERE folio_devolucion IN(SELECT folio_devolucion FROM devolucion WHERE DATEDIFF(fecha, ?) = 0 )");
-  $stmtFoliosDevolucion->bind_param("s", $fecha);
+  $stmtFoliosDevolucion = $enlace->prepare("CREATE TEMPORARY TABLE devoluciones_dia SELECT folio_devolucion, clave_producto as clave, cantidad, cantidad * (SELECT precio FROM producto WHERE clave_producto = clave) as monto_total FROM detalle_devolucion WHERE folio_devolucion IN(SELECT folio_devolucion FROM devolucion WHERE (DATEDIFF(fecha, ?) = 0 AND rfc_empleado = ?))");
+  $stmtFoliosDevolucion->bind_param("ss", $fecha, $rfc_emp);
   $stmtFoliosDevolucion->execute();
   $stmtFoliosDevolucion->close(); //creamos la tabla
   
-  $stmtConseguirFolios = $enlace->prepare("SELECT folio_devolucion FROM devolucion WHERE DATEDIFF(fecha, ?) = 0");
-  $stmtConseguirFolios->bind_param("s", $fecha);
+  $stmtConseguirFolios = $enlace->prepare("SELECT folio_devolucion FROM devolucion WHERE (DATEDIFF(fecha, ?) = 0 AND rfc_empleado = ?)");
+  $stmtConseguirFolios->bind_param("ss", $fecha, $rfc_emp);
   $stmtConseguirFolios->execute();
   $foliosDevolucion = $stmtConseguirFolios->get_result();
   $stmtConseguirFolios->close();
@@ -119,8 +120,8 @@ $totalFlujos = 0;
   unset($data);
 
   $stmtTotalFolio->close();
-  $stmtConseguirFlujos = $enlace->prepare("SELECT folio_flujo, monto, hora FROM flujo_efectivo WHERE DATEDIFF(fecha, ?) = 0 ");
-  $stmtConseguirFlujos->bind_param("s", $fecha);
+  $stmtConseguirFlujos = $enlace->prepare("SELECT folio_flujo, monto, hora FROM flujo_efectivo WHERE (DATEDIFF(fecha, ?) = 0 AND id_empleado = ?)");
+  $stmtConseguirFlujos->bind_param("ss", $fecha, $rfc_emp);
   $stmtConseguirFlujos->execute();
   $foliosFlujo = $stmtConseguirFlujos->get_result(); //para flujos es una simple consulta
   $stmtConseguirFlujos->close();
@@ -161,7 +162,6 @@ $totalFlujos = 0;
   $pdf->BasicTable($header,$data);
   $pdf->Ln();
 
-  $rfc_emp = "1234567890121"; //cambiar estos a valores dados por $_SESSION[]
   $rfc_geren = $_SESSION["empleado"]; //aqui guardamos el valor del rfc actual y solo pueden entrar a esta vista los gerentes
         
   $rfcs = [$rfc_emp, $rfc_geren];
