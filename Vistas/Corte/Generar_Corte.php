@@ -35,7 +35,7 @@ $stmtConseguirInfoVentas->execute();
 $stmtConsultarTotalVenta = $enlace->prepare("SELECT folio_venta, SUM(total) as monto_venta FROM desglose_dia WHERE folio_venta = ?");
 $stmtConsultarTotalVenta->bind_param("i", $folioVenta);
 
-$stmtConseguirFoliosDia = $enlace->prepare("SELECT folio_venta, metodo_pago FROM venta WHERE (DATEDIFF(fecha_venta, ?) = 0 AND rfc_empleado = ?)"); //generamos los folios del día, para iterar sobre ellos
+$stmtConseguirFoliosDia = $enlace->prepare("SELECT folio_venta, metodo_pago, iva FROM venta WHERE (DATEDIFF(fecha_venta, ?) = 0 AND rfc_empleado = ?)"); //generamos los folios del día, para iterar sobre ellos
 $stmtConseguirFoliosDia->bind_param("ss", $fecha, $rfc_emp);
 $stmtConseguirFoliosDia->execute();
 
@@ -62,11 +62,14 @@ $totalFlujos = 0;
       $stmtConsultarTotalVenta->execute();
       $resultadoTotal = $stmtConsultarTotalVenta->get_result();
       $tuplaVenta = $resultadoTotal->fetch_assoc();
+    
+      $iva = $tuplaFolio["iva"];
+    
       if($tuplaFolio["metodo_pago"] == "efectivo"){
-          $totalVentasEfectivo += $tuplaVenta["monto_venta"]; 
+          $totalVentasEfectivo += ($tuplaVenta["monto_venta"] + ($tuplaVenta["monto_venta"] * $iva)); 
       }
       else{
-          $totalVentasCredito += $tuplaVenta["monto_venta"]; 
+          $totalVentasCredito += ($tuplaVenta["monto_venta"] + ($tuplaVenta["monto_venta"] * $iva)); 
       }
     
       $data[] = [$tuplaVenta["folio_venta"], $tuplaVenta["monto_venta"], ucfirst($tuplaFolio["metodo_pago"])];
@@ -96,18 +99,25 @@ $totalFlujos = 0;
   $stmtTotalFolio = $enlace->prepare("SELECT folio_devolucion, SUM(monto_total) as monto_devolucion FROM devoluciones_dia WHERE folio_devolucion = ?");
   $stmtTotalFolio->bind_param("i", $folioDevolucion);
 
+  $stmtIvaVentaAsociada = $enlace->prepare("SELECT iva FROM venta WHERE folio_venta IN (SELECT folio_venta FROM devolucion WHERE folio_devolucion = ?)");
+  $stmtIvaVentaAsociada->bind_param("i", $folioDevolucion);
+
   //IMPRIMIR TOTAL DEVOLUCIONES
   agregarTitulo("Devoluciones", $pdf);
 
   $header = array("Folio", "Monto Devolucion");
   $data = [];
 
-  while($tuplaFolio = $foliosDevolucion->fetch_assoc()){ 
+  while($tuplaFolio = $foliosDevolucion->fetch_assoc()){
       $folioDevolucion = $tuplaFolio["folio_devolucion"];
       $stmtTotalFolio->execute();
       $resultadoTotal = $stmtTotalFolio->get_result();
       $tuplaDevolucion = $resultadoTotal->fetch_assoc();
-      $totalDevoluciones += $tuplaDevolucion["monto_devolucion"];
+      
+      $stmtIvaVentaAsociada->execute();
+      $iva = $stmtIvaVentaAsociada->get_result()->fetch_assoc()["iva"];
+    
+      $totalDevoluciones += ($tuplaDevolucion["monto_devolucion"] + ($tuplaDevolucion["monto_devolucion"] * $iva));
     
       $data[] = [$tuplaDevolucion["folio_devolucion"], $tuplaDevolucion["monto_devolucion"]];
   }  
