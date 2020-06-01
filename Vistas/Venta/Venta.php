@@ -117,6 +117,7 @@
 ?>
   
 <p>Le atiende: <strong><?=$nomEmpleado?></strong></p>
+<p>RFC Empleado: <?=$_SESSION["empleado"]?></p>
   
 <p>Folio de la venta actual: <?=$folio?></p>
 <p>Fecha actual: <?=date("Y-m-d")?></p>
