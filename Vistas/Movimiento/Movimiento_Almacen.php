@@ -15,7 +15,8 @@ $rfc = $_SESSION["empleado"];
 $stmtFolioActual = $enlace->prepare("SELECT folio_movimiento FROM movimiento_almacen ORDER BY folio_movimiento DESC");
 $stmtFolioActual->execute();
 
-$folioActual = $stmtFolioActual->get_result()->fetch_assoc()["folio_movimiento"] + 1;
+$resultadoFolioActual = $stmtFolioActual->get_result(); 
+$folioActual = $resultadoFolioActual->num_rows != 0 ? $resultadoFolioActual->fetch_assoc()["folio_movimiento"] + 1 : 1;
 
 $stmtAumentarCantidadStock = $enlace->prepare("UPDATE producto SET cantidad = cantidad + ? WHERE clave_producto = ?");
 $stmtAumentarCantidadStock->bind_param("ii", $cantidad, $id);

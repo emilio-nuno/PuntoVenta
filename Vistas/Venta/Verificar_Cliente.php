@@ -24,9 +24,6 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     if(empty(trim($_POST["rfc"]))){
         $rfc_err = "Por favor inserte un RFC.";
     }
-    elseif(strlen($_POST["rfc"]) < 13){
-        $rfc_err = "El RFC debe tener 13 caracteres";
-    }
     else{
         // Prepare a select statement
         $sql = "SELECT rfc FROM cliente WHERE rfc = ?";
