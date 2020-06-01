@@ -46,6 +46,17 @@ $infoEmpleado = $stmtInfoEmpleado->get_result();
     
 $tuplaInfoEmpleado= $infoEmpleado->fetch_assoc();
 $nomEmpleado = $tuplaInfoEmpleado["nombre_empleado"];
+$rfc_empleado = $_SESSION["empleado"];
+
+$stmtInfoCliente = $enlace->prepare("SELECT nombre, rfc FROM cliente WHERE rfc IN (SELECT id_cliente FROM venta WHERE folio_venta = ?)");
+$stmtInfoCliente->bind_param("s" , $_SESSION["folio_venta"]);
+$stmtInfoCliente->execute();
+
+$infoCliente = $stmtInfoCliente->get_result();
+    
+$tuplaInfoCliente = $infoCliente->fetch_assoc();
+$nomCliente = $tuplaInfoCliente["nombre"];
+$rfc_cliente = $tuplaInfoCliente["rfc"];
 
 $stmtProductosVenta = $enlace->prepare("SELECT clave_producto, cantidad, valor_unitario FROM detalle_venta WHERE folio_venta = ?");
 $stmtProductosVenta->bind_param("i", $_SESSION["folio_venta"]);
@@ -66,11 +77,16 @@ $stmtInfoProducto->bind_param("i", $clave_producto);
 </head>
 
 <body>
+  
   <p>Le atiende: <strong><?=$nomEmpleado?></strong></p>
+  <p>RFC Empleado: <?=$rfc_empleado?></p>
   
   <p>Folio de la devolución actual: <?=$folio?></p>
   <p>Fecha actual: <?=date("Y-m-d")?></p>
   <p>Venta asociada a esta Devolución: <?=$_SESSION["folio_venta"]?></p>
+  
+  <p>La venta fue realizada por <?=$nomCliente?></p>
+  <p>RFC Cliente: <?=$rfc_cliente?></p>
   
   <!--Aquí va la tabla de productos-->
   <table class="pure-table">
