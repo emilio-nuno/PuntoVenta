@@ -63,8 +63,21 @@ $stmtProductosVenta->bind_param("i", $_SESSION["folio_venta"]);
 $stmtProductosVenta->execute();
 $resultadoProductosVenta = $stmtProductosVenta->get_result();
 
-$stmtInfoProducto = $enlace->prepare("SELECT nombre, descripcion FROM producto WHERE clave_producto = ?");
+$stmtInfoProducto = $enlace->prepare("SELECT nombre, descripcion, precio FROM producto WHERE clave_producto = ?");
 $stmtInfoProducto->bind_param("i", $clave_producto);
+
+$stmtInfoPagoVenta = $enlace->prepare("CREATE TEMPORARY TABLE desglose_dia SELECT folio_venta, clave_producto, cantidad, valor_unitario, valor_unitario * cantidad as total FROM detalle_venta");
+$stmtInfoPagoVenta->execute();
+
+$stmtInfoVentaIndividual = $enlace->prepare("SELECT folio_venta, SUM(total) as monto FROM desglose_dia WHERE folio_venta = ?");
+$stmtInfoVentaIndividual->bind_param("i", $_SESSION["folio_venta"]);
+$stmtInfoVentaIndividual->execute();
+$montoVenta = $stmtInfoVentaIndividual->get_result()->fetch_assoc()["monto"];
+
+$stmtIVAVenta = $enlace->prepare("SELECT iva FROM venta WHERE folio_venta = ?");
+$stmtIVAVenta->bind_param("i", $_SESSION["folio_venta"]);
+$stmtIVAVenta->execute();
+$iva = $stmtIVAVenta->get_result()->fetch_assoc()["iva"];
 ?>
 
 <!DOCTYPE html>
@@ -97,6 +110,8 @@ $stmtInfoProducto->bind_param("i", $clave_producto);
               <th>Nombre</th>
               <th>Descripción</th>
               <th>Cantidad</th>
+              <th>Precio</th>
+              <th>Importe</th>
           </tr>
         </thead>
         <tbody>
@@ -105,6 +120,7 @@ $stmtInfoProducto->bind_param("i", $clave_producto);
             $clave_producto = $tuplaProductoVenta["clave_producto"];
             $stmtInfoProducto->execute();
             $tuplaInfoProducto = $stmtInfoProducto->get_result()->fetch_assoc();
+            $precio = $tuplaInfoProducto["precio"]; //esto solo saca el precio de la bd pero idealmente se sacaria de la tabla venta, arreglar
             $nombre = $tuplaInfoProducto["nombre"];
             $desc = $tuplaInfoProducto["descripcion"];
             ?>
@@ -112,10 +128,16 @@ $stmtInfoProducto->bind_param("i", $clave_producto);
               <td><?=$nombre?></td>
               <td><?=$desc?></td>
               <td><?=$tuplaProductoVenta["cantidad"]?></td>
+              <td><?=$precio?></td>
+              <td><?=$tuplaProductoVenta["cantidad"] * $precio?></td>
           </tr>
           <?php } ?>
         </tbody>
       </table> 
+  
+  <p>Subtotal de la Venta: <?=$montoVenta?></p>
+  <p>IVA de la Venta: <?=$montoVenta * $iva?></p>
+  <p>Total de la Venta: <?=$montoVenta + ($montoVenta * $iva)?></p>
   
   <p>Vendedor, por favor <span style="color:red;">verifique</span> los productos entregados por el cliente antes de llenar el formulario para cada producto</p>
   <form class="pure-form" method="post">
