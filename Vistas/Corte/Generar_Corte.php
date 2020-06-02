@@ -43,7 +43,7 @@ $resultadoFolios = $stmtConseguirFoliosDia->get_result();
 $stmtConseguirInfoVentas->close();
 $stmtConseguirFoliosDia->close();
 
-$totalVentasEfectivo = 0;
+$totalVentasEfectivo = 2000;
 $totalVentasCredito = 0;
 $totalDevoluciones = 0;
 $totalFlujos = 0;
@@ -53,7 +53,7 @@ $totalFlujos = 0;
   //IMPPRIMIR TOTAL DE VENTAS
   agregarTitulo("Ventas", $pdf);
 
-  $header = array("Folio", "Monto de Venta", "Metodo de Pago");
+  $header = array("Folio", "Total de Venta", "Metodo de Pago");
   $data = [];
   
   while($tuplaFolio = $resultadoFolios->fetch_assoc()){ 
@@ -71,7 +71,7 @@ $totalFlujos = 0;
           $totalVentasCredito += ($tuplaVenta["monto_venta"] + ($tuplaVenta["monto_venta"] * $iva)); 
       }
     
-      $data[] = [$tuplaVenta["folio_venta"], $tuplaVenta["monto_venta"], ucfirst($tuplaFolio["metodo_pago"])];
+      $data[] = [$tuplaVenta["folio_venta"], $tuplaVenta["monto_venta"] + ($tuplaVenta["monto_venta"] * $iva), ucfirst($tuplaFolio["metodo_pago"])];
   }
   
   $data[] = ["Total Efectivo", $totalVentasEfectivo];
@@ -104,7 +104,7 @@ $totalFlujos = 0;
   //IMPRIMIR TOTAL DEVOLUCIONES
   agregarTitulo("Devoluciones", $pdf);
 
-  $header = array("Folio", "Monto Devolucion");
+  $header = array("Folio", "Total Devolucion");
   $data = [];
 
   while($tuplaFolio = $foliosDevolucion->fetch_assoc()){
@@ -118,7 +118,7 @@ $totalFlujos = 0;
     
       $totalDevoluciones += ($tuplaDevolucion["monto_devolucion"] + ($tuplaDevolucion["monto_devolucion"] * $iva));
     
-      $data[] = [$tuplaDevolucion["folio_devolucion"], $tuplaDevolucion["monto_devolucion"]];
+      $data[] = [$tuplaDevolucion["folio_devolucion"], $tuplaDevolucion["monto_devolucion"] + ($tuplaDevolucion["monto_devolucion"] * $iva)];
   }  
 
   $data[] = ["Total", $totalDevoluciones];
