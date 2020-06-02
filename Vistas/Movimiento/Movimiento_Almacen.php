@@ -182,7 +182,7 @@ function selectElement(id, valueToSelect){
           <input type="text" placeholder="Motivo" name="motivoProducto" id="motivoProducto" required>
           <button type="button" class="pure-button pure-button-primary" onclick="MostrarCarritoMotivo();">Agregar a Carrito</button>
           <?php }else{ ?>
-          <button type="button" class="pure-button pure-button-primary" onclick="MostrarCarrito();">Agregar a Carrito</button>
+          <button type="button" class="pure-button pure-button-primary" onclick="MostrarCarritoProveedor();">Agregar a Carrito</button>
           <?php } ?>
       
           <div id="descProducto">
